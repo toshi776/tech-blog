@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>イワシス：長崎・九州のAI×DXコンサルティング – 地方企業のAI×DXパートナー</title>
+
+  <!-- Meta -->
+  <meta name="description"
+        content="長崎・九州エリアの地方中小企業専門AI×DXコンサルティング。開発・運用・コンサルに加え、教育・インクルーシブ支援まで網羅。AIを活用した高速開発、自動化、データ分析で時間削減・売上向上・コスト削減を実現します。"/>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- Fallback for Lucide Icons -->
+  <script>
+    // Fallback loading for Lucide
+    if (typeof lucide === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"><\/script>');
+    }
+  </script>
+
+  <!-- Font & base style -->
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+    body{font-family:"Inter",sans-serif}
+    
+    /* Fallback styles for icons when Lucide fails to load */
+    [data-lucide]:before {
+      content: "●";
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      text-align: center;
+    }
+    
+    /* Ensure all sections are visible */
+    section {
+      display: block !important;
+      visibility: visible !important;
+    }
+  </style>
+<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script><script charset="utf-8">/**
+ * js_common.js
+ */
+
+//get select domain from ssl pages
+// var re = /\/user\/ssl/ig;
+// if (re.test(location.href) == true) {
+//     var select_domain = String(localStorage.getItem("da:app/domain")).trim();
+//     if (select_domain && select_domain.length!==0 ) {
+//         select_domain = select_domain.replace(/\"/g, '');//remove "
+//         var url = '/CMD_SSL?json=yes&domain=' + select_domain + '&dnsproviders=yes&ipp=50';
+//         $.ajax({
+//             url,
+//             success: function (data) {
+//             },
+//             error: function (data) {
+//                 window.location.href = '/user/domains';
+//             }
+//         });
+//     }
+// }
+
+localStorage.setItem("evolution:dark-mode", "disable");
+
+$(document).ready(function () {
+    $('.root-preloader > img').attr('src', '/_assets/img/preloader.svg');
+});
+
+//html replace setting
+var PROXY_HTML_REPLACES=new Array();
+// SSL lets encrypt
+//PROXY_HTML_REPLACES.push({'uri':'/user/ssl/server' ,
+//    'select':'div.inputCheck-label' ,
+//    'search':'Create your own self signed certificate' , 'replace':'自己署名証明書を作成'});
+PROXY_HTML_REPLACES.push({'uri':'/user/password' ,'select':'#root > div > div.app-content > main > section > article > section:nth-child(2) > div:nth-child(1) > div > label > span' , 'search':'Current DirectAdmin Password:' , 'replace':'現在のパスワード：'});
+PROXY_HTML_REPLACES.push({'uri':'/user/plugins/jetbackup5' ,'select':'title' , 'search':'DirectAdmin ' , 'replace':''});
+
+PROXY_HTML_REPLACES.push({'uri':'/user/dns/mx-records' ,'select':'#root > div > div.app-content > main > section > article > section:nth-child(3) > header > h2 > span' , 'search':'オプション' , 'replace':'メール配送設定'});
+PROXY_HTML_REPLACES.push({'uri':'/user/dns/mx-records' ,'select':'#root > div > div.app-content > main > section > article > section:nth-child(3) > div:nth-child(2) > div > div.formElement-content > label > div > div.inputCheck-label > span' , 'search':'Use this server to handle my e-mails. If not, change the MX records and uncheck this option.' , 'replace':'他サーバーでメールを運用する場合はチェックを外します。このサーバーでメールを運用する場合はチェックする必要があります。'});
+
+
+
+
+//css modify setting
+var PROXY_CSS_REPLACES=new Array();
+
+
+//PROXY_CSS_REPLACES.push({'uri':'*' ,'select':'#root > div > div.app-content > main > section > article > header.app-page-header' ,'css':['margin-top','0px']});
+PROXY_CSS_REPLACES.push({'uri':'*' ,'select':'#root > div > div > header' ,'css':['display','none']});
+PROXY_CSS_REPLACES.push({'uri':'*' ,'select':'#i_header_links' ,'css':['display','none']});
+PROXY_CSS_REPLACES.push({'uri':'*' ,'select':'#root > div > div.app-content > div' ,'css':['display','none']});
+PROXY_CSS_REPLACES.push({'uri':'*' ,'select':'#root > div > div.app-content > main > section > div > div > div.filters-bar' ,'css':['display','none']});
+PROXY_CSS_REPLACES.push({'uri':'/user/dns' ,'select':'nav > button' ,'css':['display','block']});
+PROXY_CSS_REPLACES.push({'uri':'/user/dns/mx-records' ,'select':'header > div' ,'css':['display','block']});
+PROXY_CSS_REPLACES.push({'uri':'/user/dns/mx-records' ,'select':'header > div > nav' ,'css':['display','block']});
+PROXY_CSS_REPLACES.push({'uri':'/user/dns/mx-records' ,'select':'header > div > nav > button' ,'css':['display','block']});
+
+
+
+//domainselect
+var _setting_domain='';
+
+/**
+ * 他に特別な処理が有る場合は適時追記していく
+ */
+$(function() {
+
+    // jetbackup 不正URL制御
+    str = location.href;
+    re = /\/user\/plugins\/jetbackup5/ig;
+    if( re.test(str) == true && getParam('path') != "index.html"){
+        location.href = "/user/plugins/jetbackup5?path=index.html";
+        return;
+    }
+
+
+    $(window).on("click",function(e){
+        var str = location.href;
+        var re = /\/CMD_FILE_MANAGER.*/ig;
+        if( re.test(str) == true ){
+            $('body > div.q-menu.q-position-engine.scroll > div > a').remove();
+        }
+    });
+
+});
+
+function getParam(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function _check_table_dkmi() {
+    $('.input-checkbox').hide();
+    $('#records-table > div > div.r-table-buttons-before').hide();
+    $('#records-table > div > div.relative.mb-4.inline-flex.justify-end.overflow-y-hidden.p-1').hide();
+    $('#root > div > div > main > section > article > header > div > nav.app-page-header-buttons').hide();
+    // x._domainkey のレコード以外を非表示
+    var list = $('#records-table > div > div > table > tbody.q-virtual-scroll__content');
+    list.find('tr');
+    var count = list.find('tr').length;
+    for (var i = 0; i < count; i++) {
+        var _text = list.find('tr').eq(i).find('td').eq(1).find('div').text();
+        _text = _text.trim();
+        // console.log('text', _text)
+        if (_text != 'x._domainkey') {
+            list.find('tr').eq(i).hide();
+        }
+        if (_text == 'x._domainkey') {
+            list.find('tr').eq(i).show();
+        }
+    }
+    $('#records-table').show();
+    $('#records-table > div > div > table > tbody.q-virtual-scroll__content').show();
+}
+
+function _email_add_admin_view_btn(){
+    var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+    var _back_btn = _btn.find('span').find('span');
+    for (var i = 0; i < _back_btn.length; i++) {
+        var t = $(_back_btn[i]).text();
+        t =  t.trim();
+        if (t == '加入者を追加' ) {
+            let back = $(_back_btn[i]).parent().parent();
+            back.show();
+        }
+    }
+}
+
+function _enable_hotlink_btn(){
+    var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+    var _back_btn = _btn.find('span').find('span');
+    for (var i = 0; i < _back_btn.length; i++) {
+        var t = $(_back_btn[i]).text();
+        t =  t.trim();
+        if (t == '直リンク保護を無効' || t == '直リンク保護を有効' || t == '選択中のドメインを追加') {
+            let back = $(_back_btn[i]).parent().parent();
+            back.show();
+        }
+    }
+}
+
+function _enable_create_db_btn() {
+    var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+    var _back_btn = _btn.find('span').find('span');
+    for (var i = 0; i < _back_btn.length; i++) {
+        var t = $(_back_btn[i]).text();
+        t = t.trim();
+        if (t == 'Create New Database') {
+            let back = $(_back_btn[i]).parent().parent();
+            back.show();
+        }
+    }
+}
+
+///evo/user/profile
+function _disable_ad_db(){
+    // console.log('/evo/user/profile');
+    $('#root > div > div.app-content.flex.w-full.flex-col > main > section > article > div:nth-child(2)').hide();
+    $('#root > div > div.app-content.flex.w-full.flex-col > main > section > article > div:nth-child(6)').hide();
+    $('#root > div > div.app-content.flex.w-full.flex-col > main > section > article > div:nth-child(8)').hide();
+    $('#root > div > div.app-content.flex.w-full.flex-col > main > section > article > hr:nth-child(5)').hide();
+    $('#root > div > div.app-content.flex.w-full.flex-col > main > section > article > hr:nth-child(7)').hide();
+    // $('#root > div > div > main > section > article > div:nth-child(4)').hide();
+    var checkboxs = $.find('.input-checkbox');
+    if ( $(checkboxs[0]).attr('class') =='input-checkbox --checked' ){
+        $(checkboxs[0]).click();
+        $(checkboxs[0]).hide();
+    }
+    if ( $(checkboxs[2]).attr('class') =='input-checkbox --checked' ){
+        $(checkboxs[2]).click();
+        $(checkboxs[2]).hide();
+    }
+}
+
+//以下変更不要
+
+/**
+ * init
+ */
+$(function() {
+    $('.app-page-header-navigation').hide();
+    setTimeout(function(){
+        css_change();
+        replace_html();
+        ext_js_filter();
+    },1000)
+});
+
+
+function back_button_hide() {
+    var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+    var _back_btn = _btn.find('span').find('span');
+    for (var i = 0; i < _back_btn.length; i++) {
+        var t = $(_back_btn[i]).text();
+        t =  t.trim();
+        if ( t == '戻る') {
+            let back = $(_back_btn[i]).parent().parent();
+            back.hide();
+        }
+    }
+    // $('body > div.app > div.app-content > main > section > article > header > h1 > button').hide();
+}
+
+function display_mx_records(){
+    // console.log('mx-records---');
+    $('#appContent > article > section:nth-child(4)').hide();
+    $('#appContent > article > section:nth-child(6)').hide();
+    $('#appContent > article > section:nth-child(5) > div.formElement.w-full.py-4 > div > div > div > div').show();
+}
+
+function display_email_account(){
+    const targetDivs = $('#tether-host > div > div > div');
+    if (targetDivs.children('div').length === 2) {
+        const divs = targetDivs.children('div');
+        divs.eq(0).hide();
+    }
+}
+
+function display_ftp_accounts(){
+    // console.log('display_ftp_accounts');
+    const targets = $('#appContent > article > section > div > div > table > tbody');
+    const tds = targets.children('td');
+    // console.log(tds.prevObject.eq(1));
+    const trs = tds.prevObject.eq(1).children('tr');
+    // console.log(trs);
+    var max = trs.length;
+    for(var i=0;i<max;i++){
+        const targetTr = trs.eq(i);
+        // console.log(targetTr);
+        const targettds = targetTr.children('td');
+        // console.log(targettds);
+        var tmp = targettds.eq(1);
+        // console.log(tmp.children('a'));
+        const anchor = tmp.children('a');
+        var href = anchor.attr('href');
+        var text = anchor.text();
+        text = text.trim();
+        // console.log(href,text);
+        if(href=='/evo/user/profile'){
+            anchor.off('click');
+            anchor.unbind('click');
+            anchor.removeAttr('onclick');
+            const newAnchor = anchor.clone();  // 元の要素をクローン
+            newAnchor.off();                   // 全イベント解除
+            newAnchor.removeAttr('onclick');   // インラインの onclick も無効化
+            newAnchor.on('click', function(event) {
+                event.preventDefault();        // デフォルト動作も防止
+                event.stopPropagation();       // バブリングも防止
+                document.location.href = '/evo/user/domains';
+            });
+            newAnchor.attr('href', '/evo/user/domains');
+            anchor.replaceWith(newAnchor);
+        }
+    }
+}
+
+function display_profile(){
+    // console.log('display_profile');
+    // $('#appContent > article > nav > a:nth-child(1)').hide();
+    $('#appContent > article > nav > a:nth-child(2)').hide();
+    $('#appContent > article > nav > a:nth-child(3)').hide();
+}
+
+function display_profile_session(){
+    // console.log('display_profile_session');
+    $('#appContent > article > nav > a:nth-child(1)').hide();
+    $('#appContent > article > nav > a:nth-child(3)').hide();
+}
+
+function check_notfound() {
+    var str = $('#appContent > article > div > div > h2').text();
+    str = str.trim();
+    // console.log(str);
+    if ( str.includes("404") || str.includes("Not Found") ) {
+        $('#appContent > article > div.flex.flex-wrap.items-start').remove();
+    }
+}
+
+/**
+ * common filter javascript
+ */
+function ext_js_filter(){
+
+    if( $('#root > div > div > main > section > article > header > div > nav > button').length==1 ){
+        console.log('aaa');
+        var text = $($('#root > div > div > main > section > article > header > div > nav > button > span > span')[0]).text().trim();
+        if(text == 'ホームページに戻ります'){
+            $('#root > div > div > main > section > article > header > div > nav > button').hide();
+        }
+    }
+
+    if ($('body>div.notyf').length > 0) {
+        // console.log('notyf', $('body>div.notyf').length  , $('body>div.notyf') );
+        // console.log($('body>div.notyf').html());
+        var html = $('body>div.notyf').html();
+        // console.log(html);
+        //regexp h6 tag
+        var re = /<h6>(.+)<\/h6>/ig;
+        var result = html.match(re);
+        if (result && result.length > 0) {
+            // console.log('hit' , result);
+            // if find ロード string
+            var re2 = /ロード/ig;
+            let len = result.length;
+            for(let i=0;i<len;i++){
+                var result2 = result[i].match(re2);
+                if (result2 && result2.length > 0) {
+                    // console.log('hit2', result2);
+                    $('body>div.notyf>div').hide();
+                }else{
+                    $('body>div.notyf>div').show();
+                }
+            }
+        }else{
+            $('body>div.notyf>div').show();
+        }
+    }
+
+    $('body').hide();
+    $('main').hide();
+    $('body').css('opacity', '0');
+    $('main').css('opacity', '0');
+
+    back_button_hide();
+    $('.app-page-header-navigation').show();
+    $('body > div.app > div.app-content > header > div > div.domainsDropdown > span').css('width','5em');
+
+    //hide back_button
+    //$('#root > div > div > main > section > article > header > div > nav > button > span > span').each(function(){
+    $('#root > div > div > main > section > article > header > div > nav > button').each(function(){
+        var t = $(this).find("span").text();
+        var reg = new RegExp('戻る','ig');
+        var ret = reg.test(t);
+        if(ret==true){
+            $(this).hide();
+        }
+    });
+    $('#root > div > div> main > section > article > header > div')
+        .css('display','inline-flex')
+        .animate({opacity: "show"}, "slow" );
+
+    str = location.href;
+    re = /\/user\/stats/ig;
+    if( re.test(str) == true ){
+        $('div.ui-tabs-header > div.ui-tabs-header-tab').eq(2).remove();
+    }
+
+
+    str = location.href;
+    re = /\/user\/stats\/usage/ig;
+    if( re.test(str) == true ){
+        $('div.app-page-header-navigation').remove();
+    }
+
+    str = location.href;
+    re = /\/user\/stats\/webalizer/ig;
+    if( re.test(str) == true ){
+        $('div.app-page-header-navigation').remove();
+    }
+
+
+    str = location.href;
+    re = /\/user\/stats\/(.+)\/statistics\/webalizer/ig;
+    if( re.test(str) == true ){
+        $('nav > button').show();
+    }
+
+    str = location.href;
+    re = /\/user\/stats\/(.+)\/statistics\/awstats/ig;
+    if( re.test(str) == true ){
+        $('nav > button').show();
+    }
+
+    str = location.href;
+    re = /\/user\/stats\/(.+)\/statistics\/webalizer\/awstats/ig;
+    if( re.test(str) == true ){
+        $('nav > button').show();
+    }
+
+    // str = location.href;
+    // re = /\/user\/domains/ig;
+    // if( re.test(str) == true ){
+    //     $('nav > button.-theme-primary').hide();
+    // }
+
+    str = location.href;
+    re = /\/evo\/user\/domains/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/domains');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る' || t=='ドメインの名前を変更') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.hide();
+            }else if(t=='新しく追加'){
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+        $('#appContent > article > div > div > button:nth-child(2)').show();
+    }
+
+    // /evo/user/domains/add-domain
+    str = location.href;
+    re = /\evo\/user\/domains\/add\-domain/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/domains/add-domain');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    str = location.href;
+    re = /\/user\/dns/ig;
+    if( re.test(str) == true ){
+        $('#records-table').show();
+        $('#root > div > main > section> article > header > div > nav > button.button.-theme-neutral').hide();
+    }
+
+
+    str = location.href;
+    re = /\/user\/email\/create-account/ig;
+    if( re.test(str) == true ){
+        $('nav > button').show();
+    }
+
+
+    str = location.href;
+    re = /\/evo\/user\/password/ig;
+    if( re.test(str) == true ){
+        $('nav > button').show();
+        $('header > div > nav.app-page-header-links').hide();
+        back_button_hide();
+        // let dacheckd = $('body > div.app > div.app-content > main > section > article > section:nth-child(2) > div:nth-child(3) > div > div > div > div:nth-child(1)')
+        let dacheckd = $('#root > div > div > main > section > article > section:nth-child(2) > div:nth-child(3) > div > div > div > div > div:nth-child(1)');
+        if (dacheckd && dacheckd.attr('class')=='input-checkbox --checked'){
+            dacheckd.click();
+            dacheckd.hide();
+        }
+        // let dbcheckd = $('body > div.app > div.app-content > main > section > article > section:nth-child(2) > div:nth-child(3) > div > div > div > div:nth-child(3)')
+        let dbcheckd = $('#root > div > div > main > section > article > section:nth-child(2) > div:nth-child(3) > div > div > div > div > div:nth-child(3)');
+        if(dbcheckd && dbcheckd.attr('class')=='input-checkbox --checked'){
+            dbcheckd.click();
+            dbcheckd.hide();
+        }
+        // $('#root > div > main > section > article > header > div > nav').hide();
+    }
+
+    // /evo/user/email/forwarders 未翻訳部分の翻訳
+    str = location.href;
+    re = /\/evo\/user\/email\/forwarders/ig;
+    if( re.test(str) == true ){
+        var fs = $('.Select__Dropdown__Items__Item').find();
+        let c = fs.prevObject.length;
+        for(var i=0; c>i ; i++){
+            var text = $(fs.prevObject[i]).find('span').text();
+            text = text.trim();
+            if (text ==':blackhole:'){
+                $(fs.prevObject[i]).find('span').text('ブラックホール');
+            }
+            if (text == ':fail:'){
+                $(fs.prevObject[i]).find('span').text('失敗');
+            }
+        }
+    }
+
+    str = location.href;
+    re = /\/evo\/user\/ftp-accounts/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/ftp-accounts');
+	display_ftp_accounts();
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'FTPアカウントを作成') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/profile/sessions
+    str = location.href;
+    re = /\/evo\/user\/profile\/sessions/ig;
+    if( re.test(str) == true){
+        display_profile_session();
+    }
+
+    // /evo/user/profile/general
+    re2 = /\/evo\/user\/profile\/general/ig;
+    if(re2.test(str) == true){
+        display_profile();
+    }
+
+    // /evo/user/ftp-accounts/create
+    str = location.href;
+    re = /\/evo\/user\/ftp-accounts\/create/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/ftp-accounts/create');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/handlers
+    str = location.href;
+    re = /\/evo\/user\/handlers(.*)/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/handlers and more');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'ハンドラを作成' ) { // || t =='システムApacheハンドラ'
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }else if (t =='システムApacheハンドラ'){
+                let back = $(_back_btn[i]).parent().parent();
+                back.hide();
+            }
+        }
+    }
+
+    // jetbackup ヘッダ削除
+    str = location.href;
+    re = /\/user\/plugins\/jetbackup5/ig;
+    if( re.test(str) == true){
+        //remove()すると動作不良になる
+        $('#plugin-host-header').hide();
+        $('header').hide();
+    }
+
+    // /evo/user/redirects
+    str = location.href;
+    re = /\/evo\/user\/redirects/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/redirects');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '新しいリダイレクトを作成') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+    
+    // /evo/user/subdomains
+    str = location.href;
+    re = /\/evo\/user\/subdomains/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/subdomains');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'サブドメインを追加') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/ssl/server
+    str = location.href;
+    re = /\/evo\/user\/ssl(.*)/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/ssl and more');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'SSLを無効' || t =='SSL CA証明書') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/accounts
+    str = location.href;
+    re = /\/evo\/user\/email\/accounts/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/email/accounts');
+        display_email_account();
+        // $('#appContent > article > div.flex.flex-wrap.items-start.justify-end.gap-2.empty\:hidden').show();
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'アカウントを作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/forwarders
+    str = location.href;
+    re = /\/evo\/user\/email\/forwarders/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/email/forwarders');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'Eメール転送先を作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/autoresponders
+    str = location.href;
+    re = /\/evo\/user\/email\/autoresponders/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/email/autoresponders');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '自動返信を作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/autoresponders/create
+    str = location.href;
+    re = /\/evo\/user\/email\/autoresponders\/create/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/email/autoresponders/create');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/vacations
+    str = location.href;
+    re = /\/evo\/user\/email\/vacations/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/email/vacations');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'バケーションメッセージを設定' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+    // /evo/user/email/vacations/create
+    str = location.href;
+    re = /\/evo\/user\/email\/vacations\/create/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/vacations/create');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/lists
+    str = location.href;
+    re = /\/evo\/user\/email\/lists/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/email/lists');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'メーリングリストを作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+        _email_add_admin_view_btn();
+    }
+
+    // /evo/user/hotlinks
+    str = location.href;
+    re = /\/evo\/user\/hotlinks/ig;
+    if( re.test(str) == true){
+        _enable_hotlink_btn();
+    }
+
+    // /evo/user/database
+    str = location.href;
+    re = /\/evo\/user\/database/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/database');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '新しいデータベースを作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+        _enable_create_db_btn();
+    }
+    // /evo/user/database/create
+    str = location.href;
+    re = /\/evo\/user\/database\/create/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/database/create');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+        _enable_create_db_btn();
+    }
+
+    // /evo/user/ssh-keys/public
+    str = location.href;
+    re = /\/evo\/user\/ssh-keys\/public/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/ssh-keys/public');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'キーを作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/cronjobs
+    str = location.href;
+    re = /\/evo\/user\/cronjobs/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/cronjobs');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == 'Cron Jobを作成' ) {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+    // /evo/user/cronjobs/create
+    str = location.href;
+    re = /\/evo\/user\/cronjobs\/create/ig;
+    if( re.test(str) == true ){
+        // console.log('/evo/user/cronjobs/create');
+        var _btn = $('.app-page-header-navigation').find('.app-page-header-buttons').find('button');
+        var _back_btn = _btn.find('span').find('span');
+        for (var i = 0; i < _back_btn.length; i++) {
+            var t = $(_back_btn[i]).text();
+            t =  t.trim();
+            if ( t == '戻る') {
+                let back = $(_back_btn[i]).parent().parent();
+                back.show();
+            }
+        }
+    }
+
+    // /evo/user/email/lists/admins/view
+    str = location.href;
+    re = /\/evo\/user\/email\/lists\/admins\/view/ig;
+    if( re.test(str) == true){
+        // console.log('/evo/user/email/lists/admins/view');
+        $('#root > div > div > header > div > div> div > div > div > div > button').on('click', function (e) {
+            _email_add_admin_view_btn();
+        });
+        _email_add_admin_view_btn();
+    }
+
+    // /evo/user/profile
+    str = location.href;
+    re = /\/evo\/user\/profile/ig;
+    if( re.test(str) == true ){
+        _disable_ad_db();
+    }
+
+    // ssl let'sencrypt ワイルドカード非表示
+    str = location.href;
+    re = /\/user\/ssl\/letsencrypt/ig;
+    if( re.test(str) == true){
+        $('div.inputGroup-right').remove();
+    }
+
+    //default email account not change password
+    str = location.href;
+    re = /\/user\/email\/accounts/ig;
+    if( re.test(str) == true){
+        $('.ui-actions').on('mouseup',function(e){
+            setTimeout(() => {
+                if($('body > div > div > div > div > a:nth-child(1) > span').text()=='パスワードを変更'){
+                    $('body > div > div > div > div > a:nth-child(1)').remove();
+                }                    
+            }, 40);
+        });
+    }
+
+    str = location.href;
+    re = /\/user\/email\/vacations/ig;//vacations settings
+    re2 = /\/user\/email\/vacations\/create/ig;
+    re3 = /\/user\/hotlinks/ig;//直リンク保護 
+    re4 = /\/user\/php-settings/ig;//PHP設定
+    re5 = /\/user\/email\/catch-all/ig;//CatchAll設定
+    re6 = /\/user\/handlers/ig;//システムApacheのハンドラ
+    re7 = /\/user\/email\/spamassassin/ig;//メールスパムアサシン
+    if( re.test(str) == true || re2.test(str) == true || re3.test(str) == true || re4.test(str) == true
+        || re5.test(str) == true || re6.test(str) == true || re7.test(str) == true ){
+        if(_setting_domain==''){
+            _setting_domain = $("#root > div > div > header > div > div> div > div > div > div > button > span.Select__Button__Label").text();
+        }else{
+            var _current_setting_domain = $("#root > div > div > header > div > div> div > div > div > div > button > span.Select__Button__Label").text();
+            if(_current_setting_domain!=_setting_domain){
+                _setting_domain = _current_setting_domain;
+                setTimeout(function(){
+                    location.reload();
+                },180);
+            }
+        }
+    }
+
+    str = location.href;
+    re = /\/user\/email\/spamassassin/ig;//spamassassin settings
+    if( re.test(str) == true){
+        $('#root > div > div > main > section > article > header > div > nav.app-page-header-links > a').hide();
+    }
+
+    str = location.href;
+    re = /\/user\/domains\/add\-domain/ig;
+    if (re.test(str) == true) {
+        $('main > section > article > header > div > nav.app-page-header-buttons > button > span').show();
+    }
+
+    // ドメイン管理≫ドメインを選択≫ドメイン変更画面
+    str = location.href;
+    re = /\/user\/domains\/domain\/.+/ig
+    if (re.test(str) == true) {
+        $('main > section > article > header > div > nav.app-page-header-buttons > button > span').show();
+    }
+
+    // FTP設定≫FTPアカウントの作成
+    str = location.href;
+    re = /\/user\/ftp\-accounts\/create/ig
+    re2 = /\/evo\/user\/ftp\-accounts\/create/ig
+    if (re.test(str) == true || re2.test(str) == true) {
+        $('main > section > article > header > div > nav.app-page-header-buttons > button > span').show();
+    }
+
+    // メールアカウント設定≫メールアカウントを作成
+    str = location.href;
+    re = /\/evo\/user\/email\/create-account/ig
+    re2 = /\/user\/email\/create-account/ig
+    if (re.test(str) == true || re2.test(str) == true) {
+        $('main > section > article > header > div > nav.app-page-header-buttons > button > span').show();
+    }
+
+    // アクセス統計≫ドメインを選択≫統計レポートを表示
+    re = /\/evo\/user\/stats\/.+\/statistics\/webalizer/ig;
+    str = location.href;
+    if (re.test(str) == true) {
+        $('main > section > article > header > div > nav.app-page-header-buttons > button > span').show();
+    }
+
+    // /evo/user/dns
+    str = location.href;
+    re = /\/evo\/user\/dns/ig;
+    if (re.test(str) == true) {
+        $('#root > div > div > header > div > div> div > div > div > div > button').on('click',function(e){
+            _check_table_dkmi();
+            $('#root > div > div > main > section > article > section').show();
+            $('#records-table').show();
+        });
+        _check_table_dkmi();
+    }
+
+    str = location.href;
+    re = /\/evo\/user\/dns\/mx-records/ig;
+    if (re.test(str) == true) {
+        display_mx_records();
+    }
+
+    var homebt = $('body > div.app > div.app-content > main > section > article > header > div > nav.app-page-header-buttons > button > span > span.label-slot > span:nth-child(2)');
+    var hometext = homebt.text();
+    hometext = hometext.trim();
+    if (hometext == 'ホームページに戻ります' ){
+        $('.app-page-header-buttons').hide();
+    }
+
+
+    str = location.href;
+    re = /\/CMD_FILE_MANAGER/ig;
+    if (re.test(str) == true) {
+        $('#q-app > div > div > div > header > div > a').hide();
+        $('#q-app > div > div > div > div.q-drawer-container > aside > div > aside > div:nth-child(3) > div').hide();
+        $('#q-portal--menu--1 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--2 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--3 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--4 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--5 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--6 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--7 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--8 > div > div > div:nth-child(9)').hide();
+        $('#q-portal--menu--9 > div > div > div:nth-child(9)').hide();
+    }
+
+    /*
+    $('.header-logo').hide();
+    $('.userbar').hide();
+    $('.menu-trigger').hide();
+    $('.nav-grid-trigger').hide();
+    */
+    $('.menu-trigger').hide();
+    $('.nav-grid-trigger').hide();
+    $('.header-logo').remove();
+
+    $('#root > div > div > header').css({'display':'block','height': 'auto','border': 'none','background-color':'#FFFFFF'});
+    $('#root > div > div > header > div').css('float','right');
+    $('.app-header').css('border-bottom', 'none');
+    $('.app-header').css('height', '6rem');
+    $('body').css('opacity', 1);
+    $('main').css('opacity', 1);
+    $('body').show();
+    $('main').show();
+    $('#appHeader').hide();
+    check_notfound();
+}
+
+
+/**
+ * location change listener
+ */
+
+
+var denypaths = [ "/","/user/stats/account" ];
+
+var href = location.href;
+var observer = new MutationObserver(function(mutations) {
+    observer.disconnect();
+    if(denypaths.includes(location.pathname)){
+        //history.back();
+        //return;
+    }
+    css_change();
+    replace_html();
+    ext_js_filter();
+    observer.observe(document, { childList: true, subtree: true });
+    // setTimeout(function(){
+    //     css_change();
+    //     replace_html();
+    //     ext_js_filter();
+    //     observer.observe(document, { childList: true, subtree: true });
+    // },500)
+});
+
+observer.observe(document, { childList: true, subtree: true });
+
+
+
+
+/**
+ * html replace
+ */
+function replace_html(){
+    let c = PROXY_HTML_REPLACES.length;
+    for(var i=0;i<c;i++){
+        var pattern = PROXY_HTML_REPLACES[i].uri;
+        var str = location.href;
+        var select = PROXY_HTML_REPLACES[i].select;
+
+        if(  PROXY_HTML_REPLACES[i].uri =='*'){//all
+            $(select).each(function(){
+                var _html = $(this).html();
+                var replace_html = _html.replace(new RegExp(PROXY_HTML_REPLACES[i].search,'ig'),PROXY_HTML_REPLACES[i].replace);
+                $(this).html(
+                    replace_html
+                );
+            });
+        }else if(str.indexOf(pattern) > -1){//uri mache
+            $(select).each(function(){
+                var _html = $(this).html();
+                var replace_html = _html.replace(new RegExp(PROXY_HTML_REPLACES[i].search,'ig'),PROXY_HTML_REPLACES[i].replace);
+                $(this).html(
+                    replace_html
+                );
+            });
+        }
+    }
+}
+
+/**
+ * css changer
+ */
+function css_change(){
+    let c = PROXY_CSS_REPLACES.length;
+    for(var i=0;i<c;i++){
+        var pattern = PROXY_CSS_REPLACES[i].uri;
+        var str = location.href;
+        var select = PROXY_CSS_REPLACES[i].select;
+        if(  PROXY_CSS_REPLACES[i].uri =='*'){//all
+            $(select).each(function(){
+                $(this).css(PROXY_CSS_REPLACES[i].css[0] , PROXY_CSS_REPLACES[i].css[1] );
+            });
+        }else if(str.indexOf(pattern) > -1){//uri mache
+            $(select).css(PROXY_CSS_REPLACES[i].css[0] , PROXY_CSS_REPLACES[i].css[1] );
+            $(select).each(function(){
+                $(this).css(PROXY_CSS_REPLACES[i].css[0] , PROXY_CSS_REPLACES[i].css[1] );
+            });
+        }
+    }
+}
+</script>
+
+<style>
+
+#root > div > div.app-content > header {
+	display:none;
+}
+
+#root > div > div.app-content > main > section > div > div > div.filters-bar{
+	display:none;
+}
+
+#root > div > div.app-content > div{
+	display:none;
+}
+
+#i_header_links{
+	display:none;
+}
+
+#root > div > div> main > section > article > header > div{
+	display:none;
+}
+
+#i_footer{
+	display:none;
+}
+
+footer{
+	display:none;
+}
+
+/*
+#q-app > div > div > header > div > div.da-logo-wrapper.q-mx-md.q-my-sm.q-toolbar__title.ellipsis{
+	display:none;
+}
+*/
+
+#maximizeToggle{
+	display:none;
+}
+
+section.search{
+	display:none;
+}
+
+#records-table, #records-table > div > div:nth-child(2) > div > div:nth-child(2) > button:nth-child(2){
+	display:none;
+}
+
+
+.menu-trigger{ display:none; }
+.nav-grid-trigger{ display:none; }
+.header-logo{ display:none; }
+.userbar{ display:none; }
+header > div > div.q-toolbar__title{ display:none; }
+
+#q-app\ bg-primary > div > div > div.q-drawer-container > aside > div > aside > div:nth-child(1) > a{ display:none;}
+#q-app\ bg-primary > div > div > header > div > a { display:none;}
+
+#root>div>div>main>section>article>header>h1>button{display: none;}
+
+.breadcrumbs{ display: none; }
+.header-spacer{width: 100%;}
+.app-header{
+	border-bottom:none;
+	height: 6rem;
+	display: none;
+}
+/* #root>div.app-content.width\:100\%.fx\:dir\:column>main>section>article>header>div>nav>button{display: none;} */
+#root>div.app-content.width\:100\%.fx\:dir\:column>main>section>article>header>div>nav>button.button.-theme-neutral.-size-big.cursor\:pointer{
+	display: none;
+}
+#root>div.app-content.width\:100\%.fx\:dir\:column>header>div>div.domainsDropdown.fx\:dir\:row.fx\:cross\:center>span{width: 60px;}
+.header-logo{
+	opacity: 0;
+	background-image: none;
+}
+
+body,main{
+	display: none;
+	opacity: 0;
+}
+
+#root>div>main>section>article>header>h1>button{ display: none; }
+/* body>div.notyf>div{ display: none; } */
+
+#q-app>div>div>div>div.q-drawer-container>aside>div>aside>div:nth-child(1)>a{
+	display: none;
+}
+
+#appHeader > div{display: none; }
+#gridLayout > div > div{ display: none; }
+#breadcrumbs{display: none;}
+#Toolbar > div > button.grid.h-24.min-w-32.cursor-pointer.place-content-start.border-0.bg-inherit.hover\:bg-white\/10.focus\:border-0.max-md\:h-16.md\:w-\[380px\]{display: none;}
+#Toolbar > div > button:nth-child(9){display: none;}
+#appContent > article > div.border-default-gray.flex.flex-wrap.justify-between.gap-2.pb-2.sm\:border-b > div.flex.flex-wrap.items-center.justify-end.font-sans > button:nth-child(2){display: none;}
+#appContent > article > div.border-default-gray.flex.flex-wrap.justify-between.gap-2.pb-2.sm\:border-b > div.flex.flex-wrap.items-center.justify-end.font-sans > button:nth-child(3){display: none;}
+#appContent > article > div:nth-child(4) > div.col-span-2.min-w-full > div.mt-4.flex.items-center.justify-start.gap-4 > a{display: none;}
+#appContent > article > div.border-default-gray.flex.flex-wrap.justify-between.gap-2.pb-2.sm\:border-b > div.flex.items-center.gap-2.overflow-hidden > a{display: none;}
+</style>
+
+</head>
+
+
+
+<body class="min-h-screen bg-white text-gray-900">
+
+<!-- 1. Refined Hero Section with boxed brand name -->
+<section class="relative isolate overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 py-28 px-4 text-center text-white">
+  <!-- Decorative SVG circuit pattern -->
+  <svg class="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 1440 800">
+    <defs>
+      <pattern id="circuit" width="80" height="80" patternUnits="userSpaceOnUse">
+        <path d="M40 0v20m0 40v20M0 40h20m40 0h20" stroke="currentColor" stroke-width="1.2" />
+        <circle cx="40" cy="40" r="3" fill="currentColor" />
+      </pattern>
+    </defs>
+    <rect width="1440" height="800" fill="url(#circuit)" />
+  </svg>
+  
+  <!-- Dark overlay for readability -->
+  <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+
+  <div class="relative max-w-4xl mx-auto flex flex-col items-center gap-8">
+    <!-- Boxed Brand Name -->
+    <span class="inline-block rounded-md border border-white border-opacity-70 bg-white bg-opacity-10 px-6 py-2 text-xl md:text-2xl font-semibold tracking-widest backdrop-blur-sm shadow-md">
+      イワシス
+    </span>
+
+    <!-- Main Heading -->
+    <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight drop-shadow-lg">
+      IT と AI で<br class="hidden md:block">地方ビジネスを次のステージへ
+    </h1>
+
+    <!-- Sub Heading -->
+    <p class="mt-4 max-w-2xl text-lg md:text-xl text-indigo-100 opacity-90">
+      技術力 × 当事者視点で課題に寄り添う、地域密着型ワンオペ AI✕DX コンサルティング
+    </p>
+
+    <!-- CTA Buttons -->
+    <div class="mt-8 flex flex-col sm:flex-row gap-4">
+      <a href="#contact" 
+         class="inline-flex items-center justify-center gap-2 rounded-full bg-white bg-opacity-90 px-8 py-3 font-semibold text-indigo-700 shadow-lg backdrop-blur-sm hover:bg-white transition-all">
+        無料診断を予約 
+        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+      </a>
+      <a href="#solutions" 
+         class="inline-flex items-center justify-center gap-2 rounded-full border border-white border-opacity-70 px-8 py-3 font-semibold text-white hover:bg-white hover:bg-opacity-10 transition-all">
+        ソリューションを見る
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Founder ------------------------------------------------------------->
+<section class="py-20 px-4">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <img src="prof.jpg" alt="代表者の写真" class="rounded-lg shadow-lg w-full max-w-md mx-auto" />
+      <div>
+        <h2 class="text-3xl font-bold mb-6">代表者について</h2>
+      <ul class="space-y-4 text-gray-700">
+          <li class="flex items-start gap-3"><span class="w-2 h-2 bg-indigo-600 rounded-full mt-2"></span>20年以上のITエンジニア経験</li>
+          <li class="flex items-start gap-3"><span class="w-2 h-2 bg-indigo-600 rounded-full mt-2"></span>社内SEとしての豊富な経験とDXに関する知識</li>
+          <li class="flex items-start gap-3"><span class="w-2 h-2 bg-indigo-600 rounded-full mt-2"></span>精神障がいの当事者であり、障がい者支援にも注力</li>
+          <li class="flex items-start gap-3"><span class="w-2 h-2 bg-indigo-600 rounded-full mt-2"></span>地方創生・中小企業支援に情熱を注ぐ</li>
+      </ul>
+      
+      <!-- 実績数値の追加 -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-xl font-bold text-indigo-600">20+</div>
+          <div class="text-sm text-gray-600">年の経験</div>
+        </div>
+        <div class="text-center">
+          <div class="text-xl font-bold text-indigo-600">福岡・佐賀・長崎</div>
+          <div class="text-sm text-gray-600">地域密着</div>
+        </div>
+        <div class="text-center">
+          <div class="text-xl font-bold text-indigo-600">全国対応可能</div>
+          <div class="text-sm text-gray-600">フルリモート</div>
+        </div>
+      </div>
+      
+      <p class="mt-6 leading-relaxed">
+        技術的専門知識とエンジニアとしての経験、障がい当事者としての実体験を融合し、伴走型で成果につなげるコンサルティングを提供します。
+      </p>
+    </div>
+  </div>
+  
+  <!-- CTA追加 -->
+  <div class="text-center mt-8">
+    <a href="#contact" 
+       class="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 px-8 py-3 font-semibold text-white shadow-lg transition-all">
+      無料相談を始める
+      <i data-lucide="arrow-right" class="w-5 h-5"></i>
+    </a>
+  </div>
+</section>
+
+<!-- 3. 5-本柱ソリューション ----------------------------------------------->
+<section id="solutions" class="py-20 px-4 bg-gray-50">
+  <div class="max-w-6xl mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-4">提供ソリューション</h2>
+    <p class="text-gray-600 mb-16 max-w-2xl mx-auto">
+      課題 → 解決 → 成果が一目で分かる 5 つのパッケージ。
+    </p>
+
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <!-- 開発 -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i data-lucide="code" class="w-6 h-6 text-indigo-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">開発ソリューション</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          AI を活用し自社システムやパッケージ導入を高速化。
+        </p>
+        <span class="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded">#AI高速開発</span>
+      </div>
+      <!-- 運用 -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+          <i data-lucide="settings" class="w-6 h-6 text-green-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">運用オートメーション</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          運用代行 + RPA/AI で保守・定型業務を省力化。
+        </p>
+        <span class="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded">#自動化</span>
+      </div>
+      <!-- DX コンサル -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+          <i data-lucide="bar-chart-3" class="w-6 h-6 text-orange-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">DX コンサル</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          AIで業務フローを可視化し、データ✕AIでボトルネックを特定、最適ソリューションを AI で即導入
+        </p>
+        <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded">#KPI可視化</span>
+      </div>
+      <!-- IT リスキリング -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+          <i data-lucide="book-open" class="w-6 h-6 text-yellow-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">IT リスキリング</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          IT・AI リスキリングで社員のスキルを底上げし、業務効率化から業績改善まで一直線
+        </p>
+        <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded">#AI研修</span>
+      </div>
+      <!-- 障がい者雇用支援 -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+          <i data-lucide="handshake" class="w-6 h-6 text-purple-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">障がい者雇用支援</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          AIツール✕当事者知見でインクルーシブ雇用を実現、企業の社会評価をアップ
+        </p>
+        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded">#インクルーシブ</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CTA追加 -->
+  <div class="text-center mt-8">
+    <a href="#contact" 
+       class="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 px-8 py-3 font-semibold text-white shadow-lg transition-all">
+      無料診断を受ける
+      <i data-lucide="arrow-right" class="w-5 h-5"></i>
+    </a>
+  </div>
+</section>
+
+<!-- 4. Impact Metrics ---------------------------------------------------->
+<section id="impact" class="py-20 px-4">
+  <div class="max-w-6xl mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-4">期待できる効果</h2>
+    <p class="text-gray-600 mb-16">
+      時間削減・売上向上・コスト削減を同時に実現
+    </p>
+    <div id="impact-metrics" class="grid md:grid-cols-3 gap-8">
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="clock" class="w-8 h-8 text-indigo-600"></i>
+        </div>
+        <div class="text-3xl font-bold text-indigo-600 mb-2">-<span id="overtime-counter">30</span>%</div>
+        <p class="text-gray-600">時間削減</p>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="trending-up" class="w-8 h-8 text-green-600"></i>
+        </div>
+        <div class="text-3xl font-bold text-green-600 mb-2">+<span id="revenue-counter">15</span>%</div>
+        <p class="text-gray-600">売上向上</p>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="dollar-sign" class="w-8 h-8 text-orange-600"></i>
+        </div>
+        <div class="text-3xl font-bold text-orange-600 mb-2">-<span id="cost-counter">40</span>%</div>
+        <p class="text-gray-600">コスト削減</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CTA追加 -->
+  <div class="text-center mt-8">
+    <a href="#contact" 
+       class="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 px-8 py-3 font-semibold text-white shadow-lg transition-all">
+      効果を実感する
+      <i data-lucide="arrow-right" class="w-5 h-5"></i>
+    </a>
+  </div>
+</section>
+
+<!-- 5. Process Timeline -------------------------------------------------->
+<section id="process" class="py-20 px-4 bg-gray-50">
+  <div class="max-w-6xl mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-4">コンサルティングプロセス</h2>
+    <p class="text-gray-600 mb-16">
+      4 ステップで着実に成果へ導きます
+    </p>
+    <div class="grid md:grid-cols-4 gap-8">
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="search" class="w-8 h-8 text-white"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Discover</h3>
+        <p class="text-sm text-gray-600">現状把握・課題発見</p>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="stethoscope" class="w-8 h-8 text-white"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Diagnose</h3>
+        <p class="text-sm text-gray-600">詳細分析・解決策立案</p>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="rocket" class="w-8 h-8 text-white"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Deploy</h3>
+        <p class="text-sm text-gray-600">実装・導入支援</p>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4">
+          <i data-lucide="smile" class="w-8 h-8 text-white"></i>
+        </div>
+        <h3 class="font-semibold mb-2">Delight</h3>
+        <p class="text-sm text-gray-600">成果確認・継続改善</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CTA追加 -->
+  <div class="text-center mt-8">
+    <a href="#contact" 
+       class="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 px-8 py-3 font-semibold text-white shadow-lg transition-all">
+      プロセスを確認する
+      <i data-lucide="arrow-right" class="w-5 h-5"></i>
+    </a>
+  </div>
+</section>
+
+<!-- 6. Case Studies -------------------------------------------------->
+<section id="cases" class="py-20 px-4">
+  <div class="max-w-6xl mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-4">導入事例</h2>
+    <p class="text-gray-600 mb-16">ポートフォリオから代表的なプロジェクトを紹介</p>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Case 1: 有給管理システム構築 -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="flex gap-2 mb-4"><span class="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded">福祉事業所</span><span class="border border-gray-200 text-gray-600 text-xs px-2.5 py-0.5 rounded">業務効率化</span></div>
+        <h3 class="text-lg font-semibold mb-3">有給休暇管理システム</h3>
+        <p class="text-gray-600 mb-4 text-sm">低コストな Google Sheets + Apps Script で事務作業を 50% 削減。</p>
+        <div class="flex justify-center text-center text-sm text-gray-500"><span class="flex flex-col"><span class="text-xl font-bold text-indigo-600">50%</span>事務作業削減</span></div>
+      </div>
+      <!-- Case 2: DX推進代行・社内SE代行 -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="flex gap-2 mb-4"><span class="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded">製造業</span><span class="border border-gray-200 text-gray-600 text-xs px-2.5 py-0.5 rounded">DX 推進代行</span></div>
+        <h3 class="text-lg font-semibold mb-3">システム部門代行サービス</h3>
+        <p class="text-gray-600 mb-4 text-sm">社内SE代行により専任1名分の人件費を削減、月10万円の委託費で運用。</p>
+        <div class="flex gap-2 justify-center text-center text-sm text-gray-500"><span class="flex flex-col"><span class="text-xl font-bold text-indigo-600">40万円</span>月額削減</span><span class="flex flex-col"><span class="text-xl font-bold text-green-600">480万円</span>年間効果</span></div>
+      </div>
+      <!-- Case 3: ITリスキリング -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="flex gap-2 mb-4"><span class="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded">サービス業</span><span class="border border-gray-200 text-gray-600 text-xs px-2.5 py-0.5 rounded">AI 研修</span></div>
+        <h3 class="text-lg font-semibold mb-3">社員 AI スキル向上研修</h3>
+        <p class="text-gray-600 mb-4 text-sm">AI ツール活用研修により業務効率35%向上、社員のスキルアップで生産性大幅改善。</p>
+        <div class="flex gap-2 justify-center text-center text-sm text-gray-500"><span class="flex flex-col"><span class="text-xl font-bold text-indigo-600">35%</span>効率向上</span><span class="flex flex-col"><span class="text-xl font-bold text-green-600">85%</span>満足度</span></div>
+      </div>
+      <!-- Case 4: 障がい者雇用支援 -->
+      <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg border transition">
+        <div class="flex gap-2 mb-4"><span class="bg-gray-100 text-gray-800 text-xs px-2.5 py-0.5 rounded">中小企業</span><span class="border border-gray-200 text-gray-600 text-xs px-2.5 py-0.5 rounded">雇用支援</span></div>
+        <h3 class="text-lg font-semibold mb-3">障がい者雇用推進プログラム</h3>
+        <p class="text-gray-600 mb-4 text-sm">雇用率達成により納付金免除、各種助成金120万円獲得で人材不足も同時解消。</p>
+        <div class="flex gap-2 justify-center text-center text-sm text-gray-500"><span class="flex flex-col"><span class="text-xl font-bold text-indigo-600">120万円</span>助成金</span><span class="flex flex-col"><span class="text-xl font-bold text-green-600">2.3%</span>雇用率達成</span></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CTA追加 -->
+  <div class="text-center mt-8">
+    <a href="#contact" 
+       class="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 px-8 py-3 font-semibold text-white shadow-lg transition-all">
+      事例を詳しく見る
+      <i data-lucide="arrow-right" class="w-5 h-5"></i>
+    </a>
+  </div>
+</section>
+
+<!-- 7. FAQ ----------------------------------------------------------->
+<section id="faq" class="py-20 px-4 bg-gray-50">
+  <div class="max-w-4xl mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-4">よくあるご質問</h2>
+    <p class="text-gray-600 mb-16">お客様からよくいただくご質問にお答えします</p>
+    <div class="space-y-4 text-left">
+      <!-- QA 1 -->
+      <details class="border rounded-lg px-6 py-4 group open:bg-white open:shadow-md">
+        <summary class="flex justify-between items-center cursor-pointer font-medium">
+          小規模企業でも AI を導入できますか？
+          <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition"></i>
+        </summary>
+        <p class="mt-4 text-gray-600">
+          はい、可能です。まずは小さな PoC（概念実証）から始め、効果を確認しながら段階的に拡大する方法を推奨しています。
+        </p>
+      </details>
+      <!-- QA 2 -->
+      <details class="border rounded-lg px-6 py-4 group open:bg-white open:shadow-md">
+        <summary class="flex justify-between items-center cursor-pointer font-medium">
+          コンサルティング期間はどのくらいですか？
+          <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition"></i>
+        </summary>
+        <p class="mt-4 text-gray-600">
+          プロジェクトの規模によりますが、診断フェーズは 2〜4 週間、実装支援は 3〜6 か月が目安です。柔軟に調整可能です。
+        </p>
+      </details>
+      <!-- QA 3 -->
+      <details class="border rounded-lg px-6 py-4 group open:bg-white open:shadow-md">
+        <summary class="flex justify-between items-center cursor-pointer font-medium">
+          料金体系について教えてください
+          <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition"></i>
+        </summary>
+        <p class="mt-4 text-gray-600">
+          初回診断は無料です。その後はプロジェクトベースまたは月額顧問契約を選択いただけます。詳細はお問い合わせください。
+        </p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 8. CTA Banner -------------------------------------------------->
+<section class="py-20 px-4 bg-indigo-600 text-center text-white">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-bold mb-4">
+      地方創生・中小企業 DX の第一歩を、一緒に
+    </h2>
+    <p class="mb-8 text-lg">
+      まずは無料相談で、あなたの課題をお聞かせください
+    </p>
+    <a href="#contact"
+       class="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center mx-auto">
+      30 分無料相談
+      <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i>
+    </a>
+  </div>
+</section>
+
+<!-- 9. Contact ----------------------------------------------------------->
+<section id="contact" class="py-20 px-4 bg-gray-50">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold mb-4">お問い合わせ</h2>
+      <p class="text-gray-600">
+        ご質問やご相談がございましたら、お気軽にお問い合わせください
+      </p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-8">
+      <!-- 成功メッセージ（JavaScript で表示制御） -->
+      <div id="form-success" class="hidden bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-green-800">
+          <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
+          お問い合わせありがとうございます。内容を確認の上、ご連絡いたします。
+        </p>
+      </div>
+
+      <!-- エラーメッセージ（JavaScript で表示制御） -->
+      <div id="form-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-red-800">
+          <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+          送信に失敗しました。お手数ですが、再度お試しください。
+        </p>
+      </div>
+
+      <!-- PHP対応の問い合わせフォーム -->
+      <form name="contact" method="POST" action="contact2.php" class="space-y-6" id="contact-form">
+        <!-- スパム対策用隠しフィールド -->
+        <div class="hidden">
+          <label>スパム対策用（入力しないでください）: <input name="bot-field" /></label>
+        </div>
+
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+            お名前 *
+          </label>
+          <input id="name" name="name" type="text" required
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                 placeholder="山田太郎">
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            メールアドレス *
+          </label>
+          <input id="email" name="email" type="email" required
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                 placeholder="example@company.com">
+        </div>
+
+        <div>
+          <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
+            会社名・組織名
+          </label>
+          <input id="company" name="company" type="text"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                 placeholder="株式会社○○">
+        </div>
+
+        <div>
+          <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
+            お問い合わせ種別
+          </label>
+          <select id="subject" name="subject" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            <option value="">選択してください</option>
+            <option value="無料診断">無料診断について</option>
+            <option value="開発ソリューション">開発ソリューションについて</option>
+            <option value="運用オートメーション">運用オートメーションについて</option>
+            <option value="DXコンサル">DXコンサルについて</option>
+            <option value="ITリスキリング">ITリスキリングについて</option>
+            <option value="障がい者雇用支援">障がい者雇用支援について</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
+            ご相談内容 *
+          </label>
+          <textarea id="message" name="message" rows="5" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="ご相談内容やご質問をできるだけ詳しくお書きください"></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-md font-medium transition-all flex items-center justify-center">
+          <span id="submit-text">送信する</span>
+          <i data-lucide="send" class="ml-2 w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- 代替連絡手段 -->
+      <div class="mt-8 pt-6 border-t border-gray-200">
+        <p class="text-center text-sm text-gray-600">まずはお気軽にお問い合わせフォームをご利用ください</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-16 px-4">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid md:grid-cols-4 gap-8">
+      <div>
+        <h3 class="font-bold text-lg mb-4">イワシス：AI×DXコンサルティング</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          AI と DX で地域の未来をひらく、一人ひとりに寄り添うコンサルティング
+        </p>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-4">サービス</h4>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li><a href="#" class="hover:text-white transition-colors">DX診断</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">AI導入支援</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">データ分析</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">コンサルティング</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-4">会社情報</h4>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li><a href="#" class="hover:text-white transition-colors">代表者について</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">実績・事例</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">お客様の声</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">よくある質問</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-4">お問い合わせ</h4>
+        <div class="space-y-3 text-sm text-gray-400">
+          <div class="flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4"></i>
+            <span>長崎県佐世保市</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span>お問い合わせフォームをご利用ください</span>
+          </div>
+        </div>
+
+        <div class="flex gap-4 mt-6">
+          <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Twitter">
+            <i data-lucide="twitter" class="w-5 h-5"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="LinkedIn">
+            <i data-lucide="linkedin" class="w-5 h-5"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="GitHub">
+            <i data-lucide="github" class="w-5 h-5"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 mt-12 pt-8 text-center text-sm text-gray-400">
+      <p>&copy; 2024 イワシス：AI×DXコンサルティング. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Wait for DOM and external scripts to load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Lucide icons with fallback
+    function initializeLucide() {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      } else {
+        // Fallback: try again after a short delay
+        setTimeout(initializeLucide, 100);
+      }
+    }
+    
+    initializeLucide();
+
+    // Counter animation for impact metrics
+    function animateCounter(element, end, duration = 2000) {
+      if (!element) return;
+      let start = 0;
+      const range = end - start;
+      const increment = end > start ? 1 : -1;
+      const stepTime = Math.abs(Math.floor(duration / range));
+      const timer = setInterval(() => {
+        start += increment;
+        element.textContent = start;
+        if (start === end) {
+          clearInterval(timer);
+        }
+      }, stepTime);
+    }
+
+    // Intersection Observer for counter animation
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounter(document.getElementById('overtime-counter'), 30);
+          animateCounter(document.getElementById('revenue-counter'), 15);
+          animateCounter(document.getElementById('cost-counter'), 40);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    const metricsSection = document.getElementById('impact-metrics');
+    if (metricsSection) {
+      observer.observe(metricsSection);
+    }
+
+    // Contact form handling with Ajax
+    const contactForm = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitText = document.getElementById('submit-text');
+    const successMessage = document.getElementById('form-success');
+    const errorMessage = document.getElementById('form-error');
+
+    if (contactForm) {
+      contactForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // デフォルトの送信を阻止
+        
+        // ボタンを無効化して送信中表示
+        submitBtn.disabled = true;
+        submitText.textContent = '送信中...';
+        submitBtn.classList.add('opacity-75');
+        
+        // メッセージを非表示
+        successMessage.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+        
+        // フォームデータを取得
+        const formData = new FormData(contactForm);
+        
+        // Ajax送信
+        fetch('contact2.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 成功時の処理
+            successMessage.querySelector('p').innerHTML = 
+              '<i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>' + 
+              data.message;
+            successMessage.classList.remove('hidden');
+            contactForm.reset();
+            
+            // お問い合わせセクションまでスクロール
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            // エラー時の処理
+            errorMessage.querySelector('p').innerHTML = 
+              '<i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>' + 
+              data.message;
+            errorMessage.classList.remove('hidden');
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          errorMessage.querySelector('p').innerHTML = 
+            '<i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>' + 
+            'ネットワークエラーが発生しました。再度お試しください。';
+          errorMessage.classList.remove('hidden');
+          errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        })
+        .finally(() => {
+          // ボタンを元に戻す
+          submitBtn.disabled = false;
+          submitText.textContent = '送信する';
+          submitBtn.classList.remove('opacity-75');
+          
+          // アイコンを再初期化
+          if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+          }
+        });
+      });
+    }
+
+    // フォームバリデーション
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const messageInput = document.getElementById('message');
+
+    if (nameInput && emailInput && messageInput) {
+      [nameInput, emailInput, messageInput].forEach(input => {
+        input.addEventListener('blur', function() {
+          validateField(this);
+        });
+      });
+    }
+
+    function validateField(field) {
+      const value = field.value.trim();
+      
+      if (field.hasAttribute('required') && !value) {
+        field.classList.add('border-red-500');
+        field.classList.remove('border-gray-300');
+      } else if (field.type === 'email' && value && !isValidEmail(value)) {
+        field.classList.add('border-red-500');
+        field.classList.remove('border-gray-300');
+      } else {
+        field.classList.remove('border-red-500');
+        field.classList.add('border-gray-300');
+      }
+    }
+
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+  });
+
+  // Additional fallback for Lucide icons
+  window.addEventListener('load', function() {
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+---
+export interface Props {
+  title: string;
+  date: string;
+  description: string;
+}
+
+const { title, date, description } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} | toshi776技術ブログ</title>
+  <meta name="description" content={description}>
+  <link rel="stylesheet" href="/blog/styles/blog.css">
+  <!-- GA4タグ（LPと同じID） -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/blog/">← ブログトップ</a>
+      <a href="/">会社サイトへ</a>
+    </nav>
+  </header>
+  
+  <main>
+    <article>
+      <h1>{title}</h1>
+      <time datetime={date}>{new Date(date).toLocaleDateString('ja-JP')}</time>
+      <slot />
+    </article>
+  </main>
+  
+  <footer>
+    <p>© 2025 toshi776.com</p>
+  </footer>
+</body>
+</html>

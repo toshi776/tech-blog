@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const sortedPosts = posts.sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime());
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>toshi776技術ブログ - AI/DX技術の最新情報</title>
+  <meta name="description" content="長崎・九州エリアのAI/DX技術に関する最新情報をお届けします">
+  <link rel="stylesheet" href="/blog/styles/blog.css">
+  <!-- GA4タグ（LPと同じID） -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">← 会社サイトへ戻る</a>
+    </nav>
+    <h1>toshi776技術ブログ</h1>
+    <p>AI/DX技術の最新情報とビジネス活用事例</p>
+  </header>
+  
+  <main>
+    <section class="posts-list">
+      {sortedPosts.map(post => (
+        <article class="post-card">
+          <h2><a href={`/blog/posts/${post.slug}/`}>{post.data.title}</a></h2>
+          <time datetime={post.data.pubDate}>{new Date(post.data.pubDate).toLocaleDateString('ja-JP')}</time>
+          <p>{post.data.description}</p>
+          <div class="tags">
+            {post.data.tags?.map(tag => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        </article>
+      ))}
+    </section>
+  </main>
+  
+  <footer>
+    <p>© 2025 toshi776.com</p>
+  </footer>
+</body>
+</html>

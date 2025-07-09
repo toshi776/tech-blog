@@ -1,0 +1,24 @@
+# Netlify設定ファイル
+[build]
+  publish = "."
+
+# フォーム設定
+[[forms]]
+  name = "contact"
+  
+  # メール通知設定
+  [forms.settings]
+    # 送信完了後のリダイレクト先
+    success_action = "/thank-you"
+    
+    # エラー時のリダイレクト先
+    error_action = "/#contact"
+
+# カスタムヘッダー設定
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
