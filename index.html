@@ -66,6 +66,7 @@
       background: #f0f4ff;
       color: #2563eb;
       border: 1px solid #e2e8f0;
+      min-width: 140px;
     }
     .btn-tech-blog:hover {
       background: #dbeafe;
@@ -1611,11 +1612,17 @@ body,main{
     <p class="mb-8 text-lg">
       まずは無料相談で、あなたの課題をお聞かせください
     </p>
-    <a href="#contact"
-       class="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center mx-auto">
-      30 分無料相談
-      <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i>
-    </a>
+    <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+      <a href="#contact"
+         class="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+        30 分無料相談
+        <i data-lucide="arrow-right" class="ml-2 w-4 h-4"></i>
+      </a>
+      <a href="/blog/"
+         class="btn-tech-blog bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+        📝 技術ブログ
+      </a>
+    </div>
   </div>
 </section>
 
