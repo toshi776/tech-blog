@@ -1,0 +1,437 @@
+# ClaudeCode 作業指示書（LP + 静的ブログ + MCPパイプライン最終版）
+作成日: 2025-01-07
+
+---
+
+## 0. 目的と全体像
+- **LP**: 提供ソリューション & 導入事例セクションに「技術ブログ」ボタンを追加し、読者をブログへ誘導する。  
+- **ブログ**: 静的サイトを CoreServer 上に FTP デプロイ。MCP サーバから記事生成〜公開〜SNS 拡散を全自動化。  
+- **情報収集フロー**:  
+  1. **半手動** … X から有望ツイートを人力キュレーション（簡易Webフォーム or CSVエクスポート）。  
+  2. **自動** …… RSS / API / Web スクレイピングで技術ニュースを収集。  
+- **技術検証フロー**:  
+  - 収集した技術ネタをDB管理 → ビジネス価値・コスト自動試算 → 有望 2〜3 件を検証 → プロトタイプ作成 → ブログ記事＋商品案公開。
+
+```
+LP (HTML+JavaScript)
+   └─ CTA（技術ブログへ）
+静的ブログ (CoreServer)
+   ├─ /blog/     (記事)
+   ├─ /demos/    (インタラクティブデモ)
+   ▲  ▲
+   │  └ GitHub Actions + FTP Deploy
+   │
+MCP サーバ
+   ├─ 手動ツイート収集 (Webフォーム/CSV)
+   ├─ 自動 RSS / API 収集 (Reddit, Dev.to, Zenn追加)
+   ├─ 技術選定 & 価値評価 (SQLite DB)
+   ├─ PoC / GIF / コスト試算
+   └─ Markdown 生成 → Git push
+```
+
+---
+
+## 1. LP 最小改修タスク
+| 手順 | 内容 | 参考 |
+|------|------|------|
+| 1‑1 | **CTA ボタン追加**<br>提供ソリューション & 導入事例の「無料相談」横に<br>`<a class="btn-secondary" href="/blog/">📝 技術ブログ</a>` | 既存ボタン横にボタンを追加 |
+| 1‑2 | **スタイル**<br>`btn-secondary {background:#e3ecff;color:#0045c7;border-radius:6px;padding:12px 24px;font-size:15px}` | style.css 末尾に追記 |
+| 1‑3 | **クリック計測**<br>GTM の CSS セレクタ `.btn-secondary` を GA4 イベント `blog_cta_click` にマッピング | - |
+| 1‑4 | **SEO 見出し修正**<br>`<h2>地方中小企業向け DX / AI ソリューション</h2>` に差替 | 半角・キーワード挿入 |
+
+---
+
+## 2. 静的ブログ新規構築 (CoreServer)
+
+### 2.1 技術スタック（すべて無償）
+| 用途 | ツール | 理由 |
+|------|-------|------|
+| Static Site Generator | **Astro** (Markdown 中心) | 高速ビルド・React パーツ可 |
+| CI/CD | **GitHub Actions** + `SamKirkland/FTP-Deploy-Action` | FTP 自動デプロイ |
+| ホスティング | **CoreServer (FTP)** | 既契約・帯域充分 |
+| 解析 | GA4 共通 ID | LP と統合解析 |
+| DB管理 | **SQLite** | YAML より堅牢なキュー管理 |
+
+### 2.2 ディレクトリ構造
+```
+blog/
+ ├ src/
+ │  ├ pages/
+ │  │  └ {slug}.md
+ │  └ layouts/
+ │      └ BlogPost.astro
+ ├ public/
+ │  ├ assets/
+ │  └ demos/          # 技術検証デモ
+ │      └ 20250107-gemma/
+ │          ├ index.html
+ │          └ demo.js
+ ├ scripts/
+ │  └ validate_markdown.py  # XSS対策
+ ├ astro.config.mjs
+ └ .github/workflows/deploy.yml
+```
+
+### 2.3 GitHub Actions (`deploy.yml`)
+```yaml
+name: Build & Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v3
+      with: {version: 9}
+    
+    # Markdown検証（XSS対策）
+    - name: Validate Markdown
+      run: python scripts/validate_markdown.py
+    
+    # ビルド
+    - run: pnpm install
+    - run: pnpm run build        # dist/
+    
+    # バックアップ
+    - name: Backup before deploy
+      run: |
+        timestamp=$(date +%Y%m%d_%H%M%S)
+        echo "Backup timestamp: $timestamp"
+    
+    # FTPデプロイ
+    - uses: SamKirkland/FTP-Deploy-Action@v4
+      with:
+        server:   ${{ secrets.FTP_HOST }}
+        username: ${{ secrets.FTP_USER }}
+        password: ${{ secrets.FTP_PASS }}
+        local-dir: ./dist/
+        server-dir: ${{ secrets.FTP_DIR }}
+```
+
+GitHub Secrets 必須: `FTP_HOST`, `FTP_USER`, `FTP_PASS`, `FTP_DIR` (`/public_html/blog` など)
+
+---
+
+## 3. MCP サーバ自動化パイプライン（改訂版）
+
+### 3.1 データ収集
+
+#### 3.1.1 手動ツイート収集
+```python
+# 方法1: 簡易Webフォーム (Flask)
+from flask import Flask, request, render_template
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route('/submit', methods=['POST'])
+def submit_tweet():
+    db = sqlite3.connect('tech_queue.db')
+    db.execute('''
+        INSERT INTO manual_tweets (url, memo, created_at)
+        VALUES (?, ?, datetime('now'))
+    ''', (request.form['url'], request.form['memo']))
+    db.commit()
+    return "登録完了"
+```
+
+#### 3.1.2 自動ブラウジング
+```python
+# 収集ソース拡張版
+sources = {
+    'rss': [
+        'https://techcrunch.com/feed/',
+        'https://dev.to/feed',
+        'https://zenn.dev/feed',
+        'https://openai.com/blog/rss.xml'
+    ],
+    'api': [
+        'https://api.github.com/search/repositories?q=stars:>1000&sort=updated',
+        'https://hacker-news.firebaseio.com/v0/topstories.json',
+        'https://www.reddit.com/r/programming/top.json?limit=10',
+        'https://www.reddit.com/r/MachineLearning/hot.json?limit=10'
+    ]
+}
+```
+
+### 3.2 技術評価 & DB管理
+```sql
+-- SQLite スキーマ
+CREATE TABLE tech_queue (
+    id INTEGER PRIMARY KEY,
+    title TEXT,
+    source TEXT,
+    url TEXT,
+    business_score INTEGER DEFAULT 0,
+    cost_est INTEGER DEFAULT 0,
+    implementation_hours INTEGER,
+    requires_cloud BOOLEAN,
+    japanese_docs BOOLEAN,
+    github_stars INTEGER,
+    tags TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### ビジネススコア自動計算
+```python
+def calculate_business_score(tech_info):
+    score = 0
+    
+    # 市場規模・トレンド
+    if tech_info.get('github_stars', 0) > 10000:
+        score += 2
+    if any(tag in tech_info.get('tags', '') for tag in ['AI', 'automation', 'DX']):
+        score += 3
+    
+    # 実装難易度（逆相関）
+    if tech_info.get('implementation_hours', 999) < 4:
+        score += 2
+    
+    # 地方企業への適用性
+    if not tech_info.get('requires_cloud', True):
+        score += 2
+    if tech_info.get('japanese_docs', False):
+        score += 1
+    
+    return min(score, 10)
+```
+
+### 3.3 技術検証
+```
+workspace/
+  20250107-01-gemma/
+    ├ README.md     # 目的・手順
+    ├ demo.py
+    ├ demo.gif      # peek + ffmpeg 自動録画
+    ├ cost_analysis.csv
+    └ index.html    # デモ用（iframe埋め込み）
+```
+
+### 3.4 ブログ記事 & 商品案生成
+```python
+post_tmpl = f"""---
+title: "{title}"
+date: {today}
+tags: [{tags}]
+business_score: {score}
+demo_url: "/demos/{slug}/"
+---
+
+![demo](/assets/{gif})
+
+## 注目ポイント
+{problem}
+
+## ビジネス活用例
+- **導入コスト**: 約 {cost_jpy:,} 円/月
+- **効率化効果**: 作業時間 -{efficiency}%
+- **ROI**: {roi_months}ヶ月で回収見込み
+
+## 技術デモ
+<iframe src="/demos/{slug}/" width="100%" height="600px"></iframe>
+
+## 実装の詳細
+{implementation_details}
+
+## 導入支援サービス
+本技術の導入をご検討の企業様向けに、以下のサービスをご用意しています：
+
+- **初期設定パック**: ¥50,000〜
+  - 環境構築、初期カスタマイズ
+  - 操作説明（2時間）
+  
+- **月額サポート**: ¥20,000〜
+  - 定期メンテナンス
+  - 技術相談（月4回まで）
+
+[お問い合わせフォームへ](/contact/)
+
+### 今後の展開
+{future_plans}
+"""
+```
+
+### 3.5 デプロイ & 拡散
+```python
+# 自動ツイート（改善版）
+import tweepy
+from datetime import datetime
+
+def auto_tweet(article):
+    # 時間帯最適化（エンゲージメント高い時間）
+    optimal_hours = [8, 12, 19]  # 朝、昼、夜
+    current_hour = datetime.now().hour
+    
+    if current_hour in optimal_hours:
+        api = tweepy.Client(bearer_token=TWITTER_BEARER_TOKEN)
+        
+        tweet_text = f"""
+🚀 新技術レポート公開
+
+「{article['title']}」
+💰 コスト: 月額{article['cost_jpy']:,}円
+📊 ビジネス価値: {article['business_score']}/10
+⏱️ 導入工数: {article['implementation_hours']}時間
+
+詳細はこちら👇
+https://toshi776.com/blog/{article['slug']}/
+
+#DX推進 #AI活用 #業務効率化
+"""
+        api.create_tweet(text=tweet_text)
+```
+
+### 3.6 必要ライブラリ一覧
+```
+# 基本
+feedparser
+beautifulsoup4
+requests
+PyGithub
+python-frontmatter
+python-dotenv
+
+# 追加推奨
+playwright      # 動的サイト対応
+openai         # 記事要約・評価
+sqlite3        # DB管理（標準ライブラリ）
+
+# 画像・動画
+Pillow
+imageio-ffmpeg # GIF作成
+
+# SNS・解析
+tweepy
+pandas
+
+# Web UI（オプション）
+flask          # 手動入力フォーム
+streamlit      # モニタリングダッシュボード
+```
+
+### 3.7 cron 設定
+```bash
+# 情報収集（毎日朝8時）
+0 8 * * * cd /srv/mcp && python collect.py >> logs/collect.log 2>&1
+
+# 記事生成（毎日朝9時）
+0 9 * * * cd /srv/mcp && python new_post.py >> logs/post.log 2>&1
+
+# DB最適化（毎週日曜）
+0 3 * * 0 cd /srv/mcp && python optimize_db.py >> logs/optimize.log 2>&1
+```
+
+---
+
+## 4. テスト & 運用
+
+### 4.1 テスト項目
+| 区分 | 内容 | 確認方法 |
+|------|------|---------|
+| LP ボタン | PC/モバイルでリンク／GA4イベント | DevTools + GA4 リアルタイム |
+| 手動入力 | Webフォーム → DB登録 | SQLite Browser で確認 |
+| 自動収集 | RSS/API → 重複除去 → DB | ログ確認 + DB検証 |
+| スコア計算 | 自動評価ロジック | テストデータで単体テスト |
+| 記事生成 | Markdown → Git push → FTP | GitHub Actions ログ |
+| デモ環境 | iframe 埋め込み動作 | 実ブラウザで確認 |
+| SNS投稿 | 時間最適化 + 文字数 | Twitter Developer Portal |
+
+### 4.2 モニタリング（Streamlit）
+```python
+# dashboard.py
+import streamlit as st
+import sqlite3
+import pandas as pd
+
+st.title("技術ブログ運用ダッシュボード")
+
+# 記事パフォーマンス
+conn = sqlite3.connect('tech_queue.db')
+df = pd.read_sql_query("""
+    SELECT title, business_score, page_views, conversion_rate
+    FROM articles
+    ORDER BY created_at DESC
+    LIMIT 10
+""", conn)
+
+st.dataframe(df)
+st.bar_chart(df.set_index('title')['page_views'])
+```
+
+### 4.3 KPI
+- **LP**: blog_cta_click CTR（目標: 3%）
+- **ブログ**: 
+  - 月間PV（目標: 5,000）
+  - 平均滞在時間（目標: 3分）
+  - デモ操作率（目標: 20%）
+- **ビジネス**: 
+  - 問い合わせ数（目標: 月10件）
+  - 成約率（目標: 20%）
+
+---
+
+## 5. 実装スケジュール (5日)
+| Day | 作業内容 | 工数 | 成果物 |
+|----|----------|------|---------|
+| 1 | LP改修 & GTM設定 | 1h | CTAボタン実装 |
+| 1 | Astro初期設定 & テンプレート | 2h | ブログ基本構造 |
+| 2 | GitHub Actions + FTP設定 | 1.5h | 自動デプロイ |
+| 2 | SQLite DB設計 & 手動入力UI | 2h | データ基盤 |
+| 3 | RSS/API収集 & スコア計算 | 2.5h | 自動収集システム |
+| 3 | 記事生成テンプレート | 1h | Markdown生成 |
+| 4 | デモ環境構築 & GIF録画 | 2h | 検証環境 |
+| 4 | SNS自動投稿 | 1h | 拡散システム |
+| 5 | 統合テスト & ドキュメント | 2h | 運用開始準備 |
+| 5 | モニタリング構築 | 1h | ダッシュボード |
+
+---
+
+## 6. セキュリティ・バックアップ
+
+### 6.1 セキュリティ対策
+```python
+# validate_markdown.py
+import re
+import sys
+
+def validate_markdown(filepath):
+    with open(filepath, 'r') as f:
+        content = f.read()
+    
+    # 危険なパターンをチェック
+    dangerous_patterns = [
+        r'<script',
+        r'javascript:',
+        r'onerror=',
+        r'onclick='
+    ]
+    
+    for pattern in dangerous_patterns:
+        if re.search(pattern, content, re.IGNORECASE):
+            print(f"危険なコンテンツを検出: {pattern}")
+            sys.exit(1)
+    
+    print("検証OK")
+```
+
+### 6.2 バックアップ戦略
+- **Git**: すべてのコード・記事
+- **SQLite**: 日次で`.backup`コマンド
+- **FTP**: 週次で全体バックアップ
+
+---
+
+## 7. 参考リンク
+- Astro: <https://docs.astro.build/>
+- Reddit API: <https://www.reddit.com/dev/api/>
+- Playwright: <https://playwright.dev/python/>
+- Streamlit: <https://streamlit.io/>
+- FTP Deploy Action: <https://github.com/SamKirkland/FTP-Deploy-Action/>
+
+---
+
+**本指示書に基づき実装を進めてください。フェーズごとに進捗報告をお願いします。**

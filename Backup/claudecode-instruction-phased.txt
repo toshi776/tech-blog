@@ -1,0 +1,486 @@
+# ClaudeCode 作業指示書（段階的実装版）
+作成日: 2025-01-07
+
+---
+
+## 0. 基本方針と全体像
+
+### プロジェクト目標
+既存LPに技術ブログへの導線を追加し、AI/DX関連の技術情報を自動収集・検証・発信するシステムを構築する。
+
+### 実装方針
+**「動くものを3日で作り、実運用しながら改善する」**
+- 過度な自動化・機能追加は避ける
+- まずは情報収集→記事作成→公開のループを確立
+- 実データを基に必要な機能を追加
+
+### システム構成図
+```
+フェーズ0（初期3日）:
+LP (HTML) → 技術ブログ (Astro/FTP)
+              ↑
+         GitHub Actions
+              ↑
+         queue.yml ← RSS自動収集
+                   ← 手動メモ追加
+```
+
+---
+
+## フェーズ0：最小構成実装（3日間）
+
+### Day 1：基盤構築
+
+#### 1-1. LP改修（1時間）
+```html
+<!-- 既存の「無料相談」ボタンの隣に追加 -->
+<a href="/blog/" class="btn-tech-blog">📝 技術ブログ</a>
+```
+
+```css
+/* style.css 追記 */
+.btn-tech-blog {
+  background: #f0f4ff;
+  color: #2563eb;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 10px;
+  transition: all 0.3s;
+}
+.btn-tech-blog:hover {
+  background: #e0e7ff;
+}
+```
+
+#### 1-2. Astroブログ初期設定（2時間）
+```bash
+# プロジェクト作成
+npm create astro@latest tech-blog -- --template blog --typescript
+
+# 最小限の依存関係
+cd tech-blog
+npm install
+```
+
+```javascript
+// astro.config.mjs
+export default {
+  site: 'https://toshi776.com',
+  base: '/blog',
+  output: 'static'
+};
+```
+
+```astro
+<!-- src/layouts/BlogPost.astro -->
+---
+const { title, date, description } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>{title} | 技術ブログ</title>
+  <meta name="description" content={description}>
+  <link rel="stylesheet" href="/blog/styles/main.css">
+</head>
+<body>
+  <header>
+    <a href="/blog/">← ブログトップ</a>
+    <a href="/">会社サイトへ</a>
+  </header>
+  <article>
+    <h1>{title}</h1>
+    <time>{date}</time>
+    <slot />
+  </article>
+</body>
+</html>
+```
+
+### Day 2：自動化パイプライン
+
+#### 2-1. GitHub Actions設定（1時間）
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy Blog
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Install and Build
+        run: |
+          npm ci
+          npm run build
+          
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./dist/
+          server-dir: /public_html/blog/
+```
+
+#### 2-2. 情報収集スクリプト（2時間）
+```python
+# scripts/collect_rss.py
+import feedparser
+import yaml
+from datetime import datetime
+import os
+
+# 設定
+RSS_FEEDS = [
+    'https://techcrunch.com/category/artificial-intelligence/feed/',
+    'https://dev.to/feed/tag/ai',
+    'https://zenn.dev/topics/ai/feed'
+]
+
+QUEUE_FILE = 'queue.yml'
+
+def load_queue():
+    """既存のキューを読み込み"""
+    if os.path.exists(QUEUE_FILE):
+        with open(QUEUE_FILE, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f) or []
+    return []
+
+def save_queue(items):
+    """キューを保存"""
+    with open(QUEUE_FILE, 'w', encoding='utf-8') as f:
+        yaml.dump(items, f, allow_unicode=True, default_flow_style=False)
+
+def collect_feeds():
+    """RSS収集"""
+    queue = load_queue()
+    existing_urls = {item['url'] for item in queue if 'url' in item}
+    new_items = []
+    
+    for feed_url in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(feed_url)
+            for entry in feed.entries[:3]:  # 各フィードから最新3件
+                if entry.link not in existing_urls:
+                    new_items.append({
+                        'id': datetime.now().strftime('%Y%m%d') + f'-{len(queue) + len(new_items) + 1:03d}',
+                        'title': entry.title,
+                        'url': entry.link,
+                        'source': feed.feed.title,
+                        'collected_at': datetime.now().isoformat(),
+                        'status': 'pending',
+                        'memo': ''  # 手動で後から追記
+                    })
+        except Exception as e:
+            print(f"Error fetching {feed_url}: {e}")
+    
+    if new_items:
+        queue.extend(new_items)
+        save_queue(queue)
+        print(f"Added {len(new_items)} new items")
+    else:
+        print("No new items found")
+
+if __name__ == '__main__':
+    collect_feeds()
+```
+
+```yaml
+# queue.yml サンプル（手動でも編集可能）
+- id: '20250107-001'
+  title: 'OpenAI Announces GPT-5 Features'
+  url: 'https://example.com/gpt5'
+  source: 'TechCrunch'
+  collected_at: '2025-01-07T10:00:00'
+  status: 'pending'
+  memo: 'ビジネス活用の可能性大、要検証'
+  
+- id: '20250107-002'
+  title: 'ローカルLLMの新手法'
+  url: 'https://example.com/local-llm'
+  source: '手動追加'
+  collected_at: '2025-01-07T11:00:00'
+  status: 'reviewing'
+  memo: 'コスト削減効果に注目'
+```
+
+### Day 3：記事生成と公開
+
+#### 3-1. 記事生成スクリプト（2時間）
+```python
+# scripts/create_post.py
+import yaml
+import os
+from datetime import datetime
+from pathlib import Path
+
+def create_article(item):
+    """queue.ymlから記事を生成"""
+    
+    # 基本テンプレート
+    template = f"""---
+title: "{item['title']}"
+description: "{item.get('memo', '最新技術レポート')}"
+pubDate: "{datetime.now().strftime('%Y-%m-%d')}"
+tags: ["AI", "DX", "技術検証"]
+---
+
+# {item['title']}
+
+## 概要
+{item.get('memo', 'この技術について詳しく解説します。')}
+
+元記事: [{item['source']}]({item['url']})
+
+## ビジネスへの応用可能性
+
+### 想定される活用シーン
+- 業務効率化
+- コスト削減
+- 新サービス開発
+
+### 導入時の検討事項
+- 初期コスト
+- 運用体制
+- 技術的な課題
+
+## まとめ
+今後も継続的に検証を進め、実用的な活用方法を探っていきます。
+
+---
+
+💡 **この技術の導入にご興味がある方は、[お問い合わせ](/contact/)ください。**
+"""
+    
+    # ファイル名生成
+    slug = item['id']
+    filename = f"src/content/blog/{slug}.md"
+    
+    # ディレクトリ作成
+    Path("src/content/blog").mkdir(parents=True, exist_ok=True)
+    
+    # ファイル書き込み
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(template)
+    
+    print(f"Created: {filename}")
+    return filename
+
+def main():
+    # キュー読み込み
+    with open('queue.yml', 'r', encoding='utf-8') as f:
+        queue = yaml.safe_load(f)
+    
+    # statusが'ready'のものを記事化
+    for item in queue:
+        if item.get('status') == 'ready':
+            create_article(item)
+            item['status'] = 'published'
+    
+    # キュー更新
+    with open('queue.yml', 'w', encoding='utf-8') as f:
+        yaml.dump(queue, f, allow_unicode=True)
+
+if __name__ == '__main__':
+    main()
+```
+
+#### 3-2. 運用フロー設定（1時間）
+
+```bash
+# 日次運用スクリプト run_daily.sh
+#!/bin/bash
+
+# 1. RSS収集
+python scripts/collect_rss.py
+
+# 2. queue.yml を手動確認・編集
+echo "queue.yml を確認し、公開したい記事の status を 'ready' に変更してください"
+echo "メモも追記してください"
+read -p "完了したらEnterを押してください..."
+
+# 3. 記事生成
+python scripts/create_post.py
+
+# 4. Git push（自動デプロイ発動）
+git add -A
+git commit -m "Add new blog posts $(date +%Y-%m-%d)"
+git push origin main
+```
+
+---
+
+## フェーズ1：運用改善（1ヶ月後）
+
+### 実装検討項目（運用データを見て判断）
+
+#### 1-1. 簡易評価システム
+```python
+# もしqueue.ymlの管理が大変になったら追加
+def add_basic_scoring(item):
+    score = 5  # デフォルト
+    
+    # キーワードによる簡易スコアリング
+    keywords = {
+        'AI': +2,
+        'automation': +2, 
+        'ローカル': +1,
+        'オープンソース': +1,
+        '無料': +1
+    }
+    
+    for keyword, point in keywords.items():
+        if keyword in item['title']:
+            score += point
+    
+    return min(score, 10)
+```
+
+#### 1-2. 基本的な分析
+```python
+# 月次レポート生成
+def monthly_report():
+    # Google Analytics APIから取得
+    # - 各記事のPV
+    # - 滞在時間
+    # - お問い合わせへの遷移率
+    pass
+```
+
+#### 1-3. SNS投稿半自動化
+```python
+# 投稿文案を生成（手動でコピペ投稿）
+def generate_tweet(article):
+    return f"""
+📝 新しい技術レポートを公開しました
+
+「{article['title']}」
+
+{article['memo'][:50]}...
+
+詳細はブログで👇
+https://toshi776.com/blog/{article['id']}/
+
+#AI活用 #DX推進
+"""
+```
+
+---
+
+## フェーズ2：本格拡張（3ヶ月後）
+
+### 検討可能な拡張（必要性を見極めてから）
+
+1. **データベース化**
+   - queue.ymlが100件超えたらSQLite検討
+   
+2. **自動評価**
+   - OpenAI APIでビジネス価値を自動判定
+   
+3. **技術検証環境**
+   - Dockerでサンドボックス構築
+   - デモ動画の自動生成
+
+4. **完全自動投稿**
+   - Twitter API
+   - 最適投稿時間の学習
+
+---
+
+## 必要な準備
+
+### 環境・アカウント
+- [ ] CoreServer FTPアクセス情報
+- [ ] GitHubリポジトリ
+- [ ] Google Analytics 4 設定
+
+### 最小限のツール
+```bash
+# ローカル開発環境
+- Node.js 20+
+- Python 3.9+
+- Git
+
+# Pythonライブラリ（pip install）
+feedparser
+pyyaml
+```
+
+### 初期コスト
+- 全て無料ツールで構成
+- 既存のCoreServer利用
+- 人的コスト：3日間の実装時間のみ
+
+---
+
+## Day別タスクチェックリスト
+
+### Day 1 □□□
+- [ ] LP にブログボタン追加
+- [ ] CSS スタイル適用  
+- [ ] Astro プロジェクト作成
+- [ ] 基本レイアウト作成
+- [ ] GitHub リポジトリ作成
+
+### Day 2 □□□
+- [ ] GitHub Actions 設定
+- [ ] FTP秘密情報登録
+- [ ] RSS収集スクリプト作成
+- [ ] queue.yml の動作確認
+- [ ] 手動でサンプル記事追加
+
+### Day 3 □□□
+- [ ] 記事生成スクリプト作成
+- [ ] 初回記事の生成テスト
+- [ ] Git push → 自動デプロイ確認
+- [ ] ブログ公開確認
+- [ ] 運用手順書作成
+
+---
+
+## 成功指標（フェーズ0）
+
+1. **技術的成功**
+   - LPからブログへの導線が機能
+   - RSS自動収集が動作
+   - 記事公開まで15分以内
+
+2. **ビジネス的成功（1ヶ月後評価）**
+   - 週2本以上の記事公開
+   - 月間1,000PV達成
+   - 問い合わせ1件以上
+
+---
+
+## トラブルシューティング
+
+### よくある問題
+1. **FTPデプロイ失敗**
+   - FTP接続情報を再確認
+   - ファイアウォール設定確認
+
+2. **RSS取得エラー**
+   - robots.txt確認
+   - User-Agent設定追加
+
+3. **文字化け**
+   - UTF-8エンコーディング統一
+   - YAMLのunicode設定確認
+
+---
+
+**この指示書に従い、まずは3日間でフェーズ0を完成させてください。その後の拡張は実運用データを基に判断します。**

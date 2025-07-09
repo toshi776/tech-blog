@@ -1,0 +1,800 @@
+# ClaudeCode 作業指示書（最終決定版）
+作成日: 2025-01-08
+最終更新: 2025-01-08
+
+---
+
+## 0. プロジェクト概要
+
+### 目的
+既存LP（toshi776.com）に技術ブログへの導線を追加し、AI/DX技術情報を半自動で収集・検証・発信するシステムを構築する。
+
+### 基本方針
+**「3日で動くものを作り、実データを基に改善する」**
+- 完璧を求めず、まず動くものを作る
+- 手動と自動のバランスを取る
+- 実運用データを基に機能を追加
+
+### システム構成
+```
+フェーズ0（初期3-4日）:
+LP (HTML) → 技術ブログ (Astro/CoreServer)
+               ↑
+          GitHub Actions
+               ↑
+          queue.yml ← RSS自動収集
+                    ← 手動選別・編集
+```
+
+---
+
+## フェーズ0：MVP実装（3-4日間）
+
+### Day 1：基盤構築
+
+#### 1-1. LP改修とGA4設定（1.5時間）
+
+**HTMLボタン追加**
+```html
+<!-- 既存の「無料相談」ボタンの隣に追加 -->
+<a href="/blog/" class="btn-tech-blog">📝 技術ブログ</a>
+```
+
+**CSS追記**
+```css
+/* style.css 末尾に追加 */
+.btn-tech-blog {
+  background: #f0f4ff;
+  color: #2563eb;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 10px;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+.btn-tech-blog:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+```
+
+**GA4クリック計測（GTM使用）**
+1. Google Tag Managerにログイン
+2. 新規トリガー作成：
+   - トリガータイプ: クリック - すべての要素
+   - 条件: Click Classes に `btn-tech-blog` を含む
+3. 新規タグ作成：
+   - タグタイプ: GA4イベント
+   - イベント名: `blog_cta_click`
+   - トリガー: 上記で作成したトリガー
+4. プレビューで動作確認後、公開
+
+#### 1-2. Astroブログ初期設定（2時間）
+
+**プロジェクト作成**
+```bash
+# Astroプロジェクト作成
+npm create astro@latest tech-blog -- --template minimal --typescript
+
+# 必要な依存関係インストール
+cd tech-blog
+npm install
+npm install -D @astrojs/mdx @astrojs/sitemap
+```
+
+**設定ファイル**
+```javascript
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
+
+export default defineConfig({
+  site: 'https://toshi776.com',
+  base: '/blog',
+  output: 'static',
+  integrations: [mdx(), sitemap()],
+});
+```
+
+**ディレクトリ構造（統一版）**
+```
+tech-blog/
+├── src/
+│   ├── pages/
+│   │   ├── index.astro      # ブログトップ
+│   │   └── posts/           # 記事ディレクトリ
+│   │       └── [slug].astro # 動的ルート
+│   ├── content/
+│   │   └── posts/           # Markdown記事
+│   └── layouts/
+│       └── BlogPost.astro   # 記事レイアウト
+├── public/
+│   └── styles/
+│       └── blog.css
+├── scripts/                 # 自動化スクリプト
+│   ├── collect_rss.py
+│   └── create_post.py
+├── queue.yml               # 記事キュー
+└── .github/
+    └── workflows/
+        └── deploy.yml
+```
+
+**基本レイアウト**
+```astro
+---
+// src/layouts/BlogPost.astro
+export interface Props {
+  title: string;
+  date: string;
+  description: string;
+}
+
+const { title, date, description } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} | toshi776技術ブログ</title>
+  <meta name="description" content={description}>
+  <link rel="stylesheet" href="/blog/styles/blog.css">
+  <!-- GA4タグ（LPと同じID） -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/blog/">← ブログトップ</a>
+      <a href="/">会社サイトへ</a>
+    </nav>
+  </header>
+  
+  <main>
+    <article>
+      <h1>{title}</h1>
+      <time datetime={date}>{new Date(date).toLocaleDateString('ja-JP')}</time>
+      <slot />
+    </article>
+  </main>
+  
+  <footer>
+    <p>© 2025 toshi776.com</p>
+  </footer>
+</body>
+</html>
+```
+
+### Day 2：RSS収集システム
+
+#### 2-1. 情報収集スクリプト（2時間）
+
+**必要ライブラリ**
+```bash
+# requirements.txt
+feedparser==6.0.10
+pyyaml==6.0.1
+python-dateutil==2.8.2
+```
+
+**RSS収集スクリプト**
+```python
+# scripts/collect_rss.py
+import feedparser
+import yaml
+from datetime import datetime
+import os
+from dateutil import parser
+
+# 設定
+RSS_FEEDS = [
+    'https://techcrunch.com/category/artificial-intelligence/feed/',
+    'https://dev.to/feed/tag/ai',
+    'https://zenn.dev/topics/ai/feed',
+    'https://www.publickey1.jp/atom.xml'  # 日本語ソース追加
+]
+
+QUEUE_FILE = 'queue.yml'
+
+def load_queue():
+    """既存のキューを読み込み"""
+    if os.path.exists(QUEUE_FILE):
+        with open(QUEUE_FILE, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+            return data if data else []
+    return []
+
+def save_queue(items):
+    """キューを保存"""
+    with open(QUEUE_FILE, 'w', encoding='utf-8') as f:
+        yaml.dump(items, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+
+def normalize_date(date_str):
+    """日付文字列を正規化"""
+    try:
+        return parser.parse(date_str).isoformat()
+    except:
+        return datetime.now().isoformat()
+
+def collect_feeds():
+    """RSS収集メイン処理"""
+    queue = load_queue()
+    existing_urls = {item.get('url') for item in queue if 'url' in item}
+    new_items = []
+    
+    for feed_url in RSS_FEEDS:
+        try:
+            print(f"Fetching: {feed_url}")
+            feed = feedparser.parse(feed_url)
+            
+            # フィードタイトル取得
+            feed_title = feed.feed.get('title', 'Unknown Source')
+            
+            for entry in feed.entries[:3]:  # 各フィードから最新3件
+                if entry.link not in existing_urls:
+                    # 日付取得
+                    pub_date = entry.get('published', entry.get('updated', ''))
+                    
+                    new_item = {
+                        'id': datetime.now().strftime('%Y%m%d') + f'-{len(queue) + len(new_items) + 1:03d}',
+                        'title': entry.title,
+                        'url': entry.link,
+                        'source': feed_title,
+                        'published_date': normalize_date(pub_date) if pub_date else '',
+                        'collected_at': datetime.now().isoformat(),
+                        'status': 'pending',
+                        'score': None,  # 後で手動評価
+                        'memo': ''      # 後で手動追記
+                    }
+                    new_items.append(new_item)
+                    print(f"  Added: {entry.title[:50]}...")
+                    
+        except Exception as e:
+            print(f"Error fetching {feed_url}: {e}")
+    
+    if new_items:
+        queue.extend(new_items)
+        save_queue(queue)
+        print(f"\n✅ Added {len(new_items)} new items to queue")
+    else:
+        print("\n📭 No new items found")
+
+if __name__ == '__main__':
+    collect_feeds()
+```
+
+#### 2-2. キュー管理補助ツール（1時間）
+
+```python
+# scripts/queue_cli.py
+import yaml
+import sys
+from tabulate import tabulate
+
+def load_queue():
+    with open('queue.yml', 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f) or []
+
+def save_queue(queue):
+    with open('queue.yml', 'w', encoding='utf-8') as f:
+        yaml.dump(queue, f, allow_unicode=True, default_flow_style=False)
+
+def list_queue(status=None):
+    """キューを一覧表示"""
+    queue = load_queue()
+    
+    if status:
+        queue = [item for item in queue if item.get('status') == status]
+    
+    # 表示用データ準備
+    table_data = []
+    for item in queue:
+        table_data.append([
+            item['id'],
+            item['title'][:40] + '...' if len(item['title']) > 40 else item['title'],
+            item.get('status', 'pending'),
+            item.get('score', '-'),
+            item.get('memo', '')[:30] + '...' if item.get('memo', '') and len(item.get('memo', '')) > 30 else item.get('memo', '')
+        ])
+    
+    print(tabulate(table_data, headers=['ID', 'Title', 'Status', 'Score', 'Memo'], tablefmt='grid'))
+
+def update_status(item_id, new_status):
+    """ステータス更新"""
+    queue = load_queue()
+    for item in queue:
+        if item['id'] == item_id:
+            item['status'] = new_status
+            save_queue(queue)
+            print(f"✅ Updated {item_id} status to '{new_status}'")
+            return
+    print(f"❌ Item {item_id} not found")
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Usage: python queue_cli.py [list|update] [args...]")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    
+    if command == 'list':
+        status_filter = sys.argv[2] if len(sys.argv) > 2 else None
+        list_queue(status_filter)
+    
+    elif command == 'update' and len(sys.argv) >= 4:
+        update_status(sys.argv[2], sys.argv[3])
+    
+    else:
+        print("Invalid command")
+```
+
+### Day 3：記事生成とデプロイ
+
+#### 3-1. GitHub Actions設定（1時間）
+
+```yaml
+# .github/workflows/deploy.yml
+name: Build and Deploy Blog
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # 手動実行も可能に
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build Astro site
+        run: npm run build
+        env:
+          NODE_ENV: production
+          
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_DIR }}
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules/**
+            **/scripts/**
+            queue.yml
+            
+      # オプション：デプロイ成功通知
+      - name: Notify success
+        if: success()
+        run: echo "✅ Deploy completed at $(date)"
+```
+
+**GitHub Secrets設定**
+1. リポジトリの Settings → Secrets and variables → Actions
+2. 以下を追加：
+   - `FTP_HOST`: CoreServerのFTPホスト
+   - `FTP_USER`: FTPユーザー名
+   - `FTP_PASS`: FTPパスワード
+   - `FTP_DIR`: /public_html/blog/
+
+#### 3-2. 記事生成スクリプト（2時間）
+
+```python
+# scripts/create_post.py
+import yaml
+import os
+from datetime import datetime
+from pathlib import Path
+import re
+
+def slugify(text):
+    """日本語タイトルをスラッグ化"""
+    # 英数字とハイフンのみ残す
+    slug = re.sub(r'[^\w\s-]', '', text.lower())
+    slug = re.sub(r'[-\s]+', '-', slug)
+    return slug[:50]  # 長すぎる場合は切る
+
+def create_article(item):
+    """queue.ymlから記事Markdownを生成"""
+    
+    # メタ情報の準備
+    title = item['title']
+    slug = item['id']  # IDをスラッグとして使用
+    memo = item.get('memo', '')
+    score = item.get('score', 5)
+    source_name = item.get('source', 'External')
+    source_url = item.get('url', '#')
+    
+    # 記事テンプレート
+    template = f"""---
+title: "{title}"
+description: "{memo[:150] if memo else '最新のAI/DX技術に関するレポート'}"
+pubDate: "{datetime.now().strftime('%Y-%m-%d')}"
+tags: ["AI", "DX", "技術検証"]
+draft: false
+---
+
+## 概要
+
+{memo if memo else 'この技術について詳しく解説します。'}
+
+> 参考記事: [{source_name}]({source_url})
+
+## ビジネス価値評価
+
+**スコア: {score}/10**
+
+この技術のビジネス応用における評価ポイント：
+
+### 導入メリット
+- 業務効率化の可能性
+- コスト削減効果
+- 競争優位性の獲得
+
+### 想定される活用シーン
+1. **社内業務の自動化**
+   - 定型作業の削減
+   - ヒューマンエラーの防止
+
+2. **顧客サービスの向上**
+   - レスポンス時間の短縮
+   - 24時間対応の実現
+
+3. **新規事業の創出**
+   - AIを活用した新サービス
+   - データ分析による付加価値
+
+## 導入における検討事項
+
+### 技術面
+- 既存システムとの連携
+- セキュリティ対策
+- スケーラビリティ
+
+### 組織面
+- 社内教育の必要性
+- 運用体制の構築
+- 変更管理
+
+### コスト面
+- 初期投資額
+- ランニングコスト
+- ROI（投資収益率）
+
+## 実装アプローチ
+
+### フェーズ1: PoC（概念実証）
+- 小規模での効果検証
+- 技術的課題の洗い出し
+- 期間: 1-2ヶ月
+
+### フェーズ2: パイロット導入
+- 限定部署での実運用
+- 効果測定とフィードバック
+- 期間: 3-6ヶ月
+
+### フェーズ3: 本格展開
+- 全社展開
+- 継続的な改善
+- 期間: 6ヶ月以降
+
+## まとめ
+
+{title}は、適切に導入すれば大きなビジネス価値を生む可能性があります。
+まずは小規模なPoCから始めて、段階的に拡大していくアプローチを推奨します。
+
+---
+
+## お問い合わせ
+
+この技術の導入にご興味がある方は、お気軽にご相談ください。
+
+<div style="text-align: center; margin: 40px 0;">
+  <a href="/contact/" style="background: #3b82f6; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; display: inline-block;">
+    💡 無料相談を申し込む
+  </a>
+</div>
+
+### 関連サービス
+
+- **技術調査・PoC支援**: ¥300,000〜
+- **導入コンサルティング**: ¥500,000〜
+- **運用サポート**: ¥50,000/月〜
+
+詳細は[サービス一覧](/services/)をご覧ください。
+"""
+    
+    # ファイル作成
+    filename = f"src/content/posts/{slug}.md"
+    Path("src/content/posts").mkdir(parents=True, exist_ok=True)
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(template)
+    
+    print(f"✅ Created: {filename}")
+    return filename
+
+def main():
+    """メイン処理"""
+    # キュー読み込み
+    with open('queue.yml', 'r', encoding='utf-8') as f:
+        queue = yaml.safe_load(f) or []
+    
+    created_count = 0
+    
+    # statusが'ready'のものを記事化
+    for item in queue:
+        if item.get('status') == 'ready':
+            try:
+                create_article(item)
+                item['status'] = 'published'
+                item['published_at'] = datetime.now().isoformat()
+                created_count += 1
+            except Exception as e:
+                print(f"❌ Error creating article for {item['id']}: {e}")
+    
+    # キュー更新
+    with open('queue.yml', 'w', encoding='utf-8') as f:
+        yaml.dump(queue, f, allow_unicode=True, default_flow_style=False)
+    
+    if created_count > 0:
+        print(f"\n🎉 Created {created_count} articles successfully!")
+    else:
+        print("\n📭 No articles to create (no items with status='ready')")
+
+if __name__ == '__main__':
+    main()
+```
+
+### Day 4：運用開始と調整（半日）
+
+#### 4-1. 運用スクリプト（30分）
+
+```bash
+#!/bin/bash
+# daily_blog_update.sh
+
+echo "=== 技術ブログ日次更新 ==="
+echo "開始時刻: $(date)"
+
+# 1. RSS収集
+echo -e "\n📡 RSS収集中..."
+python scripts/collect_rss.py
+
+# 2. キュー確認
+echo -e "\n📋 現在のキュー:"
+python scripts/queue_cli.py list pending
+
+# 3. 手動選別の案内
+echo -e "\n👀 以下の作業を行ってください:"
+echo "1. queue.yml を開いて新着記事を確認"
+echo "2. 公開したい記事に以下を設定:"
+echo "   - status: 'ready'"
+echo "   - score: 1-10の評価"
+echo "   - memo: 日本語での解説・所感"
+echo ""
+read -p "編集が完了したらEnterを押してください..."
+
+# 4. 記事生成
+echo -e "\n📝 記事生成中..."
+python scripts/create_post.py
+
+# 5. Git操作
+if [[ `git status --porcelain` ]]; then
+    echo -e "\n🚀 GitHubへプッシュ中..."
+    git add -A
+    git commit -m "Update blog: $(date +%Y-%m-%d)"
+    git push origin main
+    echo "✅ プッシュ完了！GitHub Actionsでデプロイが開始されます"
+else
+    echo "ℹ️ 変更なし"
+fi
+
+echo -e "\n完了時刻: $(date)"
+```
+
+#### 4-2. 初回記事作成（1時間）
+
+```yaml
+# queue.yml 初回サンプル
+- id: '20250108-001'
+  title: 'ブログ開設のお知らせ：AI/DX技術の最新情報をお届けします'
+  url: 'https://toshi776.com'
+  source: '自社'
+  published_date: '2025-01-08'
+  collected_at: '2025-01-08T10:00:00'
+  status: 'ready'
+  score: 10
+  memo: '技術ブログを開設しました。地方企業のDX推進に役立つ、実践的な技術情報を定期的に発信していきます。'
+```
+
+---
+
+## フェーズ1：運用最適化（1ヶ月後）
+
+### 検討項目（データを見て判断）
+
+1. **簡易スコアリング自動化**
+```python
+# キーワードベースの事前スコアリング
+keywords_score = {
+    'AI': 2, 'ChatGPT': 3, 'automation': 2,
+    'ローカル': 1, 'オープンソース': 1
+}
+```
+
+2. **SNS投稿テンプレート生成**
+```python
+def generate_social_text(article):
+    return f"""
+【新着レポート】{article['title']}
+
+{article['memo'][:100]}...
+
+▼詳細はブログで
+https://toshi776.com/blog/{article['id']}/
+
+#AI活用 #DX推進 #地方創生
+"""
+```
+
+3. **基本分析レポート**
+- Google Analytics連携
+- 人気記事ランキング
+- 読了率・滞在時間
+
+---
+
+## フェーズ2：高度化（3ヶ月後）
+
+必要に応じて以下を検討：
+
+1. **AI活用**
+   - GPT-4による記事要約
+   - 自動タグ付け
+   - 類似記事の推薦
+
+2. **技術検証環境**
+   - Dockerサンドボックス
+   - 自動スクリーンショット
+   - パフォーマンス計測
+
+3. **収益化強化**
+   - A/Bテスト
+   - CTA最適化
+   - リード獲得フォーム
+
+---
+
+## 必要な環境・準備
+
+### 開発環境
+```bash
+# 必須
+- Node.js 20+ (LTS推奨)
+- Python 3.9+
+- Git
+
+# Pythonパッケージ
+pip install -r requirements.txt
+```
+
+### アカウント・設定
+- [ ] GitHub アカウント（リポジトリ作成済み）
+- [ ] CoreServer FTP情報
+- [ ] Google Analytics 4 プロパティID
+- [ ] Google Tag Manager アカウント
+
+### 初期費用
+- すべて無料ツールで構成
+- 人的コスト: 3-4日の実装時間
+
+---
+
+## タスクチェックリスト
+
+### Day 1（基盤）✓
+- [ ] LPにブログCTAボタン追加
+- [ ] CSSスタイル適用
+- [ ] GA4/GTMクリック計測設定
+- [ ] Astroプロジェクト作成
+- [ ] 基本レイアウト実装
+- [ ] GitHubリポジトリ作成・初回push
+
+### Day 2（収集）✓
+- [ ] Python環境セットアップ
+- [ ] RSS収集スクリプト作成
+- [ ] queue.yml動作確認
+- [ ] キュー管理CLIツール作成
+- [ ] 手動でテスト記事追加
+
+### Day 3（公開）✓
+- [ ] GitHub Secrets設定
+- [ ] GitHub Actions設定
+- [ ] 記事生成スクリプト作成
+- [ ] 初回デプロイテスト
+- [ ] FTP接続確認
+
+### Day 4（運用）✓
+- [ ] 日次運用スクリプト作成
+- [ ] 初回記事公開
+- [ ] 運用ドキュメント作成
+- [ ] チーム内共有
+
+---
+
+## 成功指標
+
+### 短期（1ヶ月）
+- **技術面**: 週2本以上の安定した記事公開
+- **集客面**: 月間300PV達成（現実的な初期目標）
+- **ビジネス面**: 問い合わせ1件以上
+
+### 中期（3ヶ月）
+- **技術面**: 半自動化による工数50%削減
+- **集客面**: 月間1,000PV、検索流入開始
+- **ビジネス面**: 月1-2件の商談獲得
+
+---
+
+## トラブルシューティング
+
+### よくある問題と対策
+
+1. **FTPデプロイエラー**
+   ```
+   Error: Login authentication failed
+   ```
+   - FTP情報（特にパスワード）を再確認
+   - IPアドレス制限がないか確認
+   - パッシブモード設定を確認
+
+2. **RSS取得エラー**
+   ```
+   Error: 403 Forbidden
+   ```
+   - User-Agent設定を追加
+   ```python
+   feedparser.parse(url, agent='Mozilla/5.0')
+   ```
+
+3. **文字化け**
+   - すべてのファイルをUTF-8で保存
+   - YAMLの`allow_unicode=True`を確認
+
+4. **GitHub Actions失敗**
+   - Secretsの設定ミスが最も多い
+   - ログを確認して原因特定
+   - ローカルでビルドテスト
+
+---
+
+## 次のステップ
+
+1. **この指示書に従ってDay 1から順次実装**
+2. **毎日の進捗をGitHubのissueで管理**
+3. **2週間運用後、フェーズ1の要否を判断**
+
+---
+
+**補足**: 困ったときは最小限の動作確認から始めてください。例：手動で1記事だけ作成→公開できたら自動化、という段階的アプローチが確実です。
