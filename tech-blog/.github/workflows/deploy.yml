@@ -1,0 +1,62 @@
+name: Build and Deploy Tech Blog
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tech-blog/package-lock.json
+          
+      - name: Install dependencies
+        run: |
+          cd tech-blog
+          npm ci
+        
+      - name: Build Astro site
+        run: |
+          cd tech-blog
+          npm run build
+        env:
+          NODE_ENV: production
+          
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./tech-blog/dist/
+          server-dir: ${{ secrets.FTP_DIR }}
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules/**
+            **/scripts/**
+            **/src/**
+            queue.yml
+            package.json
+            package-lock.json
+            astro.config.mjs
+            
+      # オプション：デプロイ成功通知
+      - name: Notify success
+        if: success()
+        run: echo "✅ Deploy completed at $(date)"
+        
+      # オプション：デプロイ失敗通知
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deploy failed at $(date)"
