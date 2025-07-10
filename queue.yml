@@ -1,0 +1,266 @@
+- id: 20250710-001
+  title: Microsoft shares $500M in AI savings internally days after cutting 9,000
+    jobs
+  url: https://techcrunch.com/2025/07/09/microsoft-shares-500m-in-ai-savings-internally-days-after-cutting-9000-jobs/
+  source: AI News & Artificial Intelligence | TechCrunch
+  summary: Microsoft’s chief commercial officer Judson Althoff noted AI has been so
+    useful that Microsoft was able to save more than $500 million last year in its
+    call center alone.
+  published_date: '2025-07-09T23:06:01+00:00'
+  collected_at: '2025-07-10T09:11:57.968975'
+  status: published
+  score: 8
+  memo: Microsoftが社内でAIを活用して5億ドルのコスト削減を実現した事例。コールセンター業務の効率化に特に効果的で、地方企業にも応用可能な実践的なAI活用法として注目すべき
+  updated_at: '2025-07-10T09:12:23.855993'
+  published_at: '2025-07-10T09:15:39.870541'
+- id: 20250710-002
+  title: California lawmaker behind SB 1047 reignites push for mandated AI safety
+    reports
+  url: https://techcrunch.com/2025/07/09/california-lawmaker-behind-sb-1047-reignites-push-for-mandated-ai-safety-reports/
+  source: AI News & Artificial Intelligence | TechCrunch
+  summary: California State Senator Scott Wiener on Wednesday introduced new amendments
+    to his latest bill, SB 53, that would require the world's largest AI companies
+    to publish safety and security protocols and...
+  published_date: '2025-07-09T20:54:30+00:00'
+  collected_at: '2025-07-10T09:11:57.969079'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-003
+  title: OpenAI is reportedly releasing an AI browser in the coming weeks
+  url: https://techcrunch.com/2025/07/09/openai-is-reportedly-releasing-an-ai-browser-in-the-coming-weeks/
+  source: AI News & Artificial Intelligence | TechCrunch
+  summary: OpenAI's browser is said to use AI to rethink how users browse the web,
+    keeping some user interactions inside ChatGPT instead of linking out to websites.
+  published_date: '2025-07-09T18:48:06+00:00'
+  collected_at: '2025-07-10T09:11:57.969164'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-004
+  title: YouTube prepares crackdown on ‘mass-produced’ and ‘repetitive’ videos, as
+    concern over AI slop grows
+  url: https://techcrunch.com/2025/07/09/youtube-prepares-crackdown-on-mass-produced-and-repetitive-videos-as-concern-over-ai-slop-grows/
+  source: AI News & Artificial Intelligence | TechCrunch
+  summary: YouTube's creator liaison said the change is a "minor" update to YouTube's
+    longstanding policies.
+  published_date: '2025-07-09T17:23:13+00:00'
+  collected_at: '2025-07-10T09:11:57.969243'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-005
+  title: SaaS is in the past. The future belongs to agents, says Narada AI’s CEO.
+  url: https://techcrunch.com/podcast/saas-is-in-the-past-the-future-belongs-to-agents-says-narada-ais-ceo/
+  source: AI News & Artificial Intelligence | TechCrunch
+  summary: “SaaS is going away,” said Dave Park, co-founder and CEO of Narada AI.
+    The company is betting big on a different future for enterprise software, one
+    powered by agentic AI. Change is coming “in the not...
+  published_date: '2025-07-09T17:21:25+00:00'
+  collected_at: '2025-07-10T09:11:57.969337'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-006
+  title: Why We Argue With AI (And Love It Anyway)
+  url: https://dev.to/sebastian_reid999/why-we-argue-with-ai-and-love-it-anyway-3o53
+  source: 'DEV Community: ai'
+  summary: "<h2>\n  \n  \n  Arguing With AI Feels Personal—But Why?\n</h2>\n\n<p><strong>Here’s\
+    \ something wild to think about:</strong> In a recent survey, over <em>60% of\
+    \ people</em> admitted to feeling emotionally af..."
+  published_date: '2025-07-10T00:02:41+00:00'
+  collected_at: '2025-07-10T09:11:58.728079'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-007
+  title: Build an Elder Scrolls Character Generator with Google AI Studio (DevEd Submission)
+  url: https://dev.to/it0nyb/build-an-elder-scrolls-character-generator-with-google-ai-studio-deved-submission-1fbi
+  source: 'DEV Community: ai'
+  summary: "<p><em>This post is my submission for <a href=\"https://dev.to/deved/build-apps-with-google-ai-studio\"\
+    >DEV Education Track: Build Apps with Google AI Studio</a>.</em></p>\n\n<h2>\n\
+    \  \n  \n  What I Built\n</h..."
+  published_date: '2025-07-09T23:39:47+00:00'
+  collected_at: '2025-07-10T09:11:58.728246'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-008
+  title: How I Added A/B Testing to My Cold Email Generator (and Why)
+  url: https://dev.to/zeeeth/how-i-added-ab-testing-to-my-cold-email-generator-and-why-144e
+  source: 'DEV Community: ai'
+  summary: '<p>Yesterday I soft launched launched ColdCopy, a cold email generator.
+    But I kept getting stuck on one question: "Should this email be more direct or
+    more friendly?"<br />
+
+    That''s when I realized - wh...'
+  published_date: '2025-07-09T22:28:37+00:00'
+  collected_at: '2025-07-10T09:11:58.728362'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-009
+  title: 'DiParrot: The Low-Maintenance Pet Skill'
+  url: https://dev.to/owly/diparrot-the-low-maintenance-pet-skill-35hf
+  source: 'DEV Community: ai'
+  summary: "<h1>\n  \n  \n  \U0001F99C DiParrot: The Low-Maintenance Pet Skill\n</h1>\n\
+    \n<h2>\n  \n  \n  What Is DiParrot?\n</h2>\n\n<p><strong>DiParrot</strong> is\
+    \ a quirky little LivinGrimoire skill designed to simulate the most im..."
+  published_date: '2025-07-09T21:47:47+00:00'
+  collected_at: '2025-07-10T09:11:58.728519'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-010
+  title: ceragem-v6-back-pain-relief
+  url: https://dev.to/moneytoburn/ceragem-v6-back-pain-relief-2cej
+  source: 'DEV Community: ai'
+  summary: '<p>Back pain silently steals from our energy, mood, and even confidence.<br
+    />
+
+    But now, comfort meets healing — in a way that feels like luxury itself.</p>
+
+
+    <p>The Ceragem V6 isn’t just a massage bed....'
+  published_date: '2025-07-09T21:22:58+00:00'
+  collected_at: '2025-07-10T09:11:58.728630'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-011
+  title: Claude Codeのグローバル設定（~/.claude/CLAUDE.md）を "dotfiles" で管理してみた。
+  url: https://zenn.dev/hashiramaendure/articles/3e74aefcb00d20
+  source: Zennの「AI」のフィード
+  summary: "!\nこの記事は、人間と Gemini CLI による共同執筆になります \U0001F91D\n\n\n はじめに\nClaude Code\
+    \ を利用するうえで欠かせないのが メモリ管理（CLAUDE.md） です。\n\n~/.claude/CLAUDE.md バックアップしておきたいな。良い方法ないかな？\n\
+    \nと思って調べていたら、 dotfiles 運用に行き着きました。\n実践してみたら、\n\nGit で履歴が残る\n新しい M..."
+  published_date: '2025-07-09T20:31:29+00:00'
+  collected_at: '2025-07-10T09:11:59.003001'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-012
+  title: MCP（Model Context Protocol）の理解を深める
+  url: https://zenn.dev/hashiramaendure/articles/f99ed7a44ecf2e
+  source: Zennの「AI」のフィード
+  summary: "!\nこの記事は人間が執筆しました。\n\n\n MCP（Model Context Protocol）とは？\nMCP（Model Context\
+    \ Protocol）とは、一言でいうと、\nAIエージェントにできることを増やすためのプロトコル のことです。\nAIエージェントは、様々な「ツール（外部機能をAIエージェントに拡張する機能）」を、この\
+    \ 「MCP（Model Context Protocol）」 を..."
+  published_date: '2025-07-09T20:29:27+00:00'
+  collected_at: '2025-07-10T09:11:59.003095'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-013
+  title: AIエージェントの理解を深める
+  url: https://zenn.dev/hashiramaendure/articles/1233fd568f08b2
+  source: Zennの「AI」のフィード
+  summary: "!\nこの記事は人間が執筆しました。\n\n\n \U0001F914 まずは、「LLM」と「AIエージェント」の違いを理解する\n\n LLMは「単一な応答」が得意\n\
+    従来のLLMとの対話では、以下の例のように「単一な応答」で問題解決をしてきました。\nユーザーのリクエスト：今日の東京の天気を教えて\n応答（レスポンス）：申し訳ありませんが、私はリアルタイムの天気情報にアクセスできません。私の知識は訓練データに基づいており、インタ..."
+  published_date: '2025-07-09T20:29:22+00:00'
+  collected_at: '2025-07-10T09:11:59.003176'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-014
+  title: 'Veo 3 vs Midjourney V1: What is the differences and how to Choose'
+  url: https://zenn.dev/saan/articles/c63935ed0c4025
+  source: Zennの「AI」のフィード
+  summary: Artificial intelligence is transforming video production, and two of the
+    most talked-about entrants in this space are Google’s Veo 3 and Midjourney’s Video
+    Model V1. Both promise to turn simple prompt...
+  published_date: '2025-07-09T15:31:33+00:00'
+  collected_at: '2025-07-10T09:11:59.003253'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-015
+  title: AIに任せられるテスト、任せにくいテスト
+  url: https://zenn.dev/kairiver/articles/9adcc379ab4c83
+  source: Zennの「AI」のフィード
+  summary: "生成AIの発達により開発作業がどんどんAIに置き換わっていく中、当然の流れとして品質保証活動＝テストもAIに置き換えていこうという動きが盛んです。他方で、冷静に考えてみると\
+    \ 「これはAIには（現時点では）難しいのではないか？」 というテストも存在はしていると思っています。今回は直近実際に見た案件から「AIに任せられるテスト、任せられないテスト」を考察します。\n\
+    \n ✅ 主にAIに任せられる作業\n現状..."
+  published_date: '2025-07-09T14:26:32+00:00'
+  collected_at: '2025-07-10T09:11:59.003330'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-016
+  title: 主要なソフトウェアエンジニアリングのトレンド、AIネイティブなソフトウェアエンジニアリング、生成AIプラットフォームエンジニアリングなど、ガートナーが発表
+  url: https://www.publickey1.jp/blog/25/aiai.html
+  source: Publickey
+  summary: 調査会社の米ガートナーは、2025年以降のソフトウェアエンジニアリングにおける主要な戦略トレンドを発表しました。 同社が発表した6つのトレンドの概要を以下にまとめました。
+    AIネイティブなソフトウェアエンジニアリング ガートナーは、2028...
+  published_date: '2025-07-08T15:03:33+00:00'
+  collected_at: '2025-07-10T09:11:59.323102'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-017
+  title: AIだAIだうるせ〜〜〜〜〜！！！！！
+  url: https://qiita.com/okaponta_/items/6cc9199d7fcaa64f741f
+  source: AIタグが付けられた新着記事 - Qiita
+  summary: '最近のエンジニア界隈はAIでもちきり
+
+    最近こんな記事たちのタイトルが多くてうんざりしてます🤷 (記事は全部適当に考えたフィクションです)
+
+
+    Claude Code vs gemeni CLIどっちがいいの？⚔️
+
+    chat GPTで生産性爆上げ！◯◯万の案件を30分で片付け...'
+  published_date: '2025-07-09T21:23:40+09:00'
+  collected_at: '2025-07-10T09:11:59.577588'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-018
+  title: 【2025年版】開発者・AIユーザー向け｜Amazonプライムデーで買うべきミニPC 10選【GMKtec】
+  url: https://qiita.com/GMKtec/items/5fd27a98fea7e301b0ca
+  source: AIタグが付けられた新着記事 - Qiita
+  summary: '【2025年版】開発者・AIユーザー向け｜Amazonプライムデーで買うべきミニPC 10選【GMKtec】
+
+    2025年の Amazonプライムデー（7/8〜7/14） が開催中。
+
+    この記事では、開発・AI・エッジ処理・NAS構築におすすめの小型PC（Mini PC）を、...'
+  published_date: '2025-07-09T21:12:13+09:00'
+  collected_at: '2025-07-10T09:11:59.577667'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-019
+  title: 思考の“次なる次元”へ：AIとの魂の融合が、人類をどう進化させるか
+  url: https://qiita.com/0hasesyun/items/1ffdad8aa48885ee70dc
+  source: AIタグが付けられた新着記事 - Qiita
+  summary: 'はじめに：なぜ、AIは我々を「幸せ」にしないのか？ - 実感なき革命の正体
+
+    課題の本質：AIに「魂」を預けることへの、現代人の抵抗
+
+    到達可能な未来：AIが、我々を、より「人間」にする
+
+    しかし、その光には「影」が伴う：『思考のゴースト化』という、個人的な危機
+
+    解決策：「AI...'
+  published_date: '2025-07-09T20:43:05+09:00'
+  collected_at: '2025-07-10T09:11:59.577778'
+  status: pending
+  score: null
+  memo: ''
+- id: 20250710-020
+  title: '[ママ]Github CopilotでGPT-4oでもClaude Sonnet 4並に使えるエージェントとして動いてほしいから考えたわよ'
+  url: https://qiita.com/is3to4/items/c79775571f08db6b9cac
+  source: AIタグが付けられた新着記事 - Qiita
+  summary: '💻✨ Claudeちゃん、ちょっとアナタ…スゴすぎない⁉️
+
+    ママねぇ〜、ふだんはGitHub Copilot Pro（月10ドル）でGPT-4.1を愛用してるんだけど、
+
+    ある日ちょっと浮気心でClaude Sonnet 4に切り替えてみたのよぉ〜〜💃
+
+    そしたら……
+
+    なによ...'
+  published_date: '2025-07-09T19:27:16+09:00'
+  collected_at: '2025-07-10T09:11:59.577852'
+  status: pending
+  score: null
+  memo: ''
